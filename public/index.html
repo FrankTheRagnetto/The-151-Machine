@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover, interactive-widget=resizes-content">
+  <meta name="theme-color" content="#08061a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="151 Machine">
+  <link rel="manifest" href="/manifest.json">
+  <link rel="icon" href="/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/icon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,300&display=swap">
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/ui-kit.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js" defer></script>
+  <title>The 151 Machine</title>
+</head>
+<body>
+  <div id="boot-overlay">
+    <div class="boot-emblem">151</div>
+    <div class="boot-bar-track"><div class="boot-bar-fill"></div></div>
+  </div>
+  <script>
+  // Boot safety net — independent of main script. If main JS crashes, this still fires.
+  window._bootErrors = [];
+  (function() {
+    // Dismiss boot overlay after 5s no matter what
+    setTimeout(function() {
+      var boot = document.getElementById('boot-overlay');
+      if (boot && !boot.classList.contains('boot-done')) {
+        console.warn('[BOOT] Safety timeout — dismissing boot overlay');
+        boot.classList.add('boot-ready');
+        setTimeout(function() { boot.classList.add('boot-done'); }, 850);
+      }
+    }, 5000);
+    // Catch ALL errors (sync, async, promise rejections)
+    function handleError(msg, line) {
+      window._bootErrors.push(msg + ' (line ' + line + ')');
+      console.error('[BOOT-SAFETY] ' + msg + ' (line ' + line + ')');
+      var boot = document.getElementById('boot-overlay');
+      if (boot && !boot.classList.contains('boot-done')) {
+        var errDiv = document.createElement('div');
+        errDiv.style.cssText = 'color:#ff6b6b;font-size:12px;font-family:monospace;max-width:90%;text-align:center;margin-top:16px;word-break:break-all;';
+        errDiv.textContent = msg + ' (line ' + line + ')';
+        boot.appendChild(errDiv);
+        setTimeout(function() {
+          boot.classList.add('boot-ready');
+          setTimeout(function() { boot.classList.add('boot-done'); }, 850);
+        }, 3000);
+      }
+    }
+    window.addEventListener('error', function(e) {
+      handleError(e.message || 'JS Error', e.lineno || '?');
+    });
+    window.addEventListener('unhandledrejection', function(e) {
+      handleError('Promise: ' + (e.reason && e.reason.message || e.reason || 'unknown'), '?');
+    });
+
+    // Fallback login handler — works even if main script crashes
+    // Attaches after DOM is ready, only activates if main script didn't attach its own handler
+    setTimeout(function() {
+      var loginBtn = document.getElementById('login-btn');
+      var loginError = document.getElementById('login-error');
+      var loginOverlay = document.getElementById('login-overlay');
+      if (!loginBtn) return;
+
+      // Show errors on the login screen too
+      if (window._bootErrors.length > 0 && loginError) {
+        loginError.textContent = 'JS Error: ' + window._bootErrors[0];
+        loginError.style.color = '#ff6b6b';
+      }
+
+      // 12/11/2026: niente parola — il gettone si chiede e basta.
+      function fallbackLogin() {
+        loginBtn.textContent = '...';
+        loginBtn.disabled = true;
+        var serverUrl = localStorage.getItem('151-server-url') || window.location.origin;
+        fetch(serverUrl + '/api/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: '{}'
+        }).then(function(res) {
+          if (res.ok) return res.json();
+          throw new Error(res.status === 429 ? 'Too many attempts' : res.status === 403 ? 'Not on your Tailscale' : 'Server error (' + res.status + ')');
+        }).then(function(data) {
+          localStorage.setItem('151-terminal-token', data.token);
+          loginOverlay.classList.add('hidden');
+          // Reload page — main script should work with valid token now
+          window.location.reload();
+        }).catch(function(err) {
+          if (loginError) loginError.textContent = err.message;
+          loginBtn.textContent = 'Retry';
+          loginBtn.disabled = false;
+        });
+      }
+
+      // Only attach if main script hasn't already set its handler
+      if (!loginBtn._mainHandlerAttached) {
+        loginBtn.onclick = fallbackLogin;
+        console.log('[BOOT-SAFETY] Fallback login handler attached');
+      }
+    }, 6000); // Wait 6s — main script should be done by then
+  })();
+  // Service worker: shell-only offline support.
+  // Default ON. Kill switch = localStorage['151-sw-enabled'] === '0'
+  // (preserves the old "unregister + wipe caches" behaviour as an escape hatch).
+  // Rationale + rules in /sw.js header comment.
+  (function() {
+    try {
+      var swEnabled = localStorage.getItem('151-sw-enabled') !== '0';
+      if (!swEnabled) {
+        // Escape hatch — nuke any SW/caches, exactly like the old kill code.
+        if ('serviceWorker' in navigator) {
+          navigator.serviceWorker.getRegistrations().then(function(regs) {
+            regs.forEach(function(r) { r.unregister(); });
+          });
+        }
+        if ('caches' in window) {
+          caches.keys().then(function(keys) {
+            keys.forEach(function(k) { caches.delete(k); });
+          });
+        }
+        console.log('[sw] disabled via 151-sw-enabled=0 — unregistered + wiped');
+        return;
+      }
+      if ('serviceWorker' in navigator) {
+        // Register after load so first-paint isn't delayed by SW install.
+        window.addEventListener('load', function() {
+          navigator.serviceWorker.register('/sw.js').then(function(reg) {
+            console.log('[sw] registered, scope:', reg.scope);
+          }).catch(function(err) {
+            console.warn('[sw] registration failed:', err && err.message);
+          });
+        });
+      }
+    } catch (e) {
+      console.warn('[sw] init error:', e && e.message);
+    }
+  })();
+  </script>
+  <!-- Star layers (faded for Soft Fog) -->
+  <!-- V2 Glass: ambient blobs via body::before/after, no star layers -->
+
+  <div id="login-overlay">
+    <div class="login-emblem">151</div>
+    <h2>The 151 Machine</h2>
+    <div class="login-subtitle">Remote Access Terminal</div>
+    <!-- 12/11/2026: nessuna parola. Il gettone arriva da solo a chi è
+         sul PC o sul Tailscale del proprietario; qui resta solo il messaggio e Retry. -->
+    <div class="login-form">
+      <button id="login-btn">Retry</button>
+    </div>
+    <div id="login-error"></div>
+    <div id="server-config-link"></div>
+  </div>
+
+  <div id="server-config-overlay" class="hidden">
+    <div class="server-config-panel">
+      <h3>Server Connection</h3>
+      <p>Enter your PC's address (local IP and port)</p>
+      <input id="server-url-input" type="url" placeholder="e.g. http://192.168.1.100:3170" autocomplete="off" spellcheck="false">
+      <div class="server-config-presets"></div>
+      <div id="server-test-status"></div>
+      <div class="server-config-actions">
+        <button id="server-test-btn">Test Connection</button>
+        <button id="server-save-btn">Save &amp; Connect</button>
+      </div>
+      <button id="server-config-close">&times;</button>
+    </div>
+  </div>
+
+  <div id="app">
+    <div id="ambient-bg"></div>
+    <div id="sidebar-overlay"></div>
+    <div id="sidebar">
+      <!-- 2026-10-16: the sessions column has its own heading, same
+           family as the Plugins one (.panel-header). The usage pill (5h +
+           weekly) is mounted here by topbar.js — it used to ride the black
+           bar at the top of #main, which is gone. -->
+      <div id="sidebar-header" class="panel-header">
+        <h2 class="panel-title">Sessions</h2>
+      </div>
+      <div id="session-list"></div>
+      <div id="sidebar-footer">
+        <div class="footer-sessions">
+          <button id="all-teams-btn" class="new-session-btn" title="New session"><span class="ns-plus">+</span><span class="ns-label">New Session</span></button>
+          <button id="trash-btn" class="trash-btn" title="Deleted chats">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div id="main">
+      <!-- 2026-10-16: the black bar that sat here (#status-bar-slot >
+           #main-topbar: usage pill + «The 151 Machine») is gone. The usage
+           pill lives in the Sessions heading and, on the phone, in #header;
+           #header is the top of the page again and pads the system-bar inset. -->
+      <div id="connection-banner">Connection lost &mdash; reconnecting...</div>
+      <div id="restart-overlay">
+        <div class="restart-scanlines"></div>
+        <div class="restart-orb"></div>
+        <div class="restart-text" id="restart-text">Server Restarting</div>
+        <div class="restart-sub" id="restart-sub">Your session will resume automatically</div>
+        <button class="restart-retry" id="restart-retry">Retry</button>
+      </div>
+      <div id="restart-changelog">
+        <div class="changelog-card">
+          <div class="changelog-header">
+            <div class="changelog-orb"></div>
+            <div class="changelog-title">What's new</div>
+          </div>
+          <ul class="changelog-list" id="changelog-items"></ul>
+          <button class="changelog-dismiss" id="changelog-dismiss">OK</button>
+        </div>
+      </div>
+      <div id="general-toast"></div>
+      <!-- [2026-09-10] Tolto <div id="undo-toast">: riquadro mai aperto da
+           nessuno script (nessuno gli metteva .show né ci scriveva dentro). -->
+      <div id="header">
+        <button id="menu-btn">&#9776;</button>
+        <!-- Lab button removed 2026-08-16 (view obsolete — plugins/lab/client.js
+             self-disables via its !labBtn guard). The freed left slot now hosts
+             the session title, left-aligned (see #header-title in main.css). -->
+        <div id="header-title">The 151 Machine</div>
+        <div id="header-status-wrap">
+          <div id="header-status"></div>
+        </div>
+        <button id="apps-btn" title="Plugins"><svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></button>
+      </div>
+
+
+      <!-- Lab Review Panel removed 2026-08-16 (obsolete). -->
+
+      <!-- Apps Panel (right sidebar) -->
+      <div id="apps-overlay"></div>
+      <div id="apps-panel">
+        <div id="apps-header" class="panel-header">
+          <!-- 2026-08-16 (UI round #3): the right-sidebar heading is now "Plugins".
+               Element ids stay #apps-* so all JS bindings and CSS rules keep working. -->
+          <!-- 2026-08-21 (round 8): la freccia indietro vive QUI, accanto alla
+               X — freccia a sinistra, X a destra. Prima stava dentro il
+               pannello e si mangiava una riga intera sopra il plugin, che sul
+               telefono è schermo rubato a ogni scorrimento. Il titolo diventa
+               il nome del plugin aperto (era fisso su "Plugins" anche dentro
+               il Playlist Doctor). -->
+          <button id="apps-back" hidden title="Back to plugins">&larr;</button>
+          <h2 class="panel-title">Plugins</h2>
+          <button id="apps-close">&times;</button>
+        </div>
+        <div id="apps-actions"></div>
+        <div id="apps-list"></div>
+        <div id="apps-container"></div>
+      </div>
+
+      <div id="empty-state">
+        <!-- Launcher page retired — New Session opens a blank chat directly.
+             [2026-09-10] Zero sessioni è uno STATO, non un errore: prima veniva
+             tappato facendone nascere una da sola, all'infinito. Adesso questa
+             pagina lo DICE, e porta con sé l'unico gesto che serve — la stessa
+             porta del bottone in fondo alla barra laterale (_launchTeam
+             'overseer'), non una seconda strada da tenere allineata.
+             Niente grafica nuova: h2 + p sono le regole di #empty-state già in
+             main.css, e il bottone riusa .new-session-btn del piede laterale. -->
+        <h2>No active sessions</h2>
+        <p>Open one when you need it. Old ones stay in Deleted chats.</p>
+        <button id="empty-new-session" class="new-session-btn" title="Open a new session"><span class="ns-plus">+</span><span class="ns-label">New Session</span></button>
+        <div id="recent-sessions-strip" class="recent-strip" hidden></div>
+      </div>
+
+      <div id="messages"></div>
+
+
+      <!-- Scroll-to-bottom FAB — redesigned 2026-08-16: proper chevron SVG
+           (was a bare &#8595; text glyph) and JS-anchored via --fab-bottom so it
+           always floats ABOVE the composer island, never over it (chat.js). -->
+      <button id="scroll-bottom-btn" title="Scroll to bottom"><span class="fab-arrow"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></span><span class="fab-count"></span></button>
+
+      <div id="input-area">
+        <div id="toolbar-slot" class="slot slot--hidden"></div>
+        <div id="command-picker"></div>
+        <div id="attachment-bar"></div>
+        <div id="input-row">
+          <!-- attach-btn is display:none since 2026-08-16 (round #4): the
+               visible "File" button moved to the toolbar (quick-actions) and
+               forwards its click here — this stays as the invisible trigger
+               that owns the picker wiring in input.js. -->
+          <button id="attach-btn"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg></button>
+          <textarea id="message-input" rows="1" placeholder="Message Claude..."></textarea>
+          <!-- stop-btn sits LEFT of mic (round #5, point 2): it toggles between
+               the textarea and mic, so the flex:1 textarea absorbs its
+               appear/disappear — mic + send stay anchored to the right edge and
+               NEVER shift, so the owner can't fat-finger the wrong button while a
+               turn is streaming and he's reaching for the mic. -->
+          <button id="stop-btn">&#9632;</button>
+          <button id="mic-btn" title="Voice input">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/>
+              <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+              <line x1="12" y1="19" x2="12" y2="22"/>
+            </svg>
+          </button>
+          <button id="send-btn-new" title="Send message">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="22" y1="2" x2="11" y2="13"/>
+              <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+            </svg>
+          </button>
+        </div>
+        <input type="file" id="file-input" accept="*/*" multiple hidden>
+      </div>
+    </div>
+
+  </div>
+
+  <div id="trash-dialog">
+    <div id="trash-box">
+      <div class="trash-head">
+        <h3>Deleted chats</h3>
+        <div class="trash-head-actions">
+          <button id="trash-close" title="Close">&times;</button>
+        </div>
+      </div>
+      <div id="trash-list"></div>
+      <div id="trash-viewer" hidden>
+        <div class="trash-viewer-head">
+          <button id="trash-viewer-back" class="trash-vbtn" title="Back to deleted chats">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+          </button>
+          <span id="trash-viewer-title"></span>
+          <button id="trash-viewer-copy" class="trash-vbtn" title="Copy transcript"></button>
+        </div>
+        <pre id="trash-viewer-text"></pre>
+      </div>
+      <!-- Observatory mount removed from the Trash panel 2026-08-20:
+           the Observatory is a system view, it never belonged inside "Deleted chats". -->
+    </div>
+  </div>
+
+  <div id="rename-dialog">
+    <div id="rename-box">
+      <h3>Rename Session</h3>
+      <input id="rename-input" type="text" placeholder="Session name">
+      <div class="btn-row">
+        <button id="rename-cancel">Cancel</button>
+        <button id="rename-save">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="link-dialog">
+    <div id="link-box">
+      <h3>Open in browser?</h3>
+      <p id="link-url-preview"></p>
+      <div class="btn-row">
+        <button id="link-cancel">Cancel</button>
+        <button id="link-open">Open</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="purify.min.js"></script>
+  <script src="marked.min.js"></script>
+
+  <!-- Battito: il posto solo dei timer periodici che bussano al server (dormono
+       a schermo spento). Deve caricare PRIMA di chiunque lo usi — topbar.js e
+       dictation.js lo pretendono e gridano in console se non c'è. -->
+  <script src="js/battito.js"></script>
+  <!-- Cosa è «per il proprietario» e non va mai nei «Passaggi»: core.js e ws.js lo usano. -->
+  <script src="js/per-utente.js"></script>
+  <script src="js/core.js"></script>
+  <script src="js/ui-kit.js"></script>
+  <!-- Il pezzo dei bottoni A/B: chat.js lo usa per ogni risposta. Prima di chat.js. -->
+  <script src="js/pezzo-bottoni.js"></script>
+  <script src="js/chat.js"></script>
+  <!-- Origin badge: says which machine serves the page vs which one answers the
+       data. Must load before ws.js, which calls into it on the first frame. -->
+  <script src="js/origin-badge.js"></script>
+  <script src="js/ws.js"></script>
+  <script src="js/sudo-telefono.js"></script>
+  <script src="js/sessions.js"></script>
+  <script src="js/input.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/topbar.js"></script>
+  <script src="js/init.js"></script>
+  <script src="js/modalita.js"></script>
+  <script src="js/dictation.js"></script>
+</body>
+</html>

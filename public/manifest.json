@@ -1,0 +1,12 @@
+{
+  "name": "The 151 Machine",
+  "short_name": "151 Machine",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#08061a",
+  "theme_color": "#08061a",
+  "icons": [
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml" }
+  ]
+}

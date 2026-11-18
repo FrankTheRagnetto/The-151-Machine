@@ -1,0 +1,38 @@
+#!/bin/sh
+# Guscio di sudo per le sessioni Claude della Machine.
+# Vive in ~/.local/bin/sudo (collegamento a questo file), primo nel PATH.
+# Cambia qualcosa SOLO se: dentro una sessione Claude (CLAUDECODE=1) E senza
+# terminale. Allora sudo chiede la password sullo schermo della Machine
+# (tools/sudo-telefono/chiedi.js). In ogni altro caso è /usr/bin/sudo, identico.
+REALE=/usr/bin/sudo
+# -n («non chiedere») dentro una sessione: era l'abitudine di quando chiedere
+# era impossibile (07/11: «sudo -n bash …» → «a password is required»,
+# la casella mai aperta). Si rispetta il -n, ma se fallisce si dice alla
+# sessione la strada giusta, così riprova da sola.
+senza_chiedere() {
+  "$REALE" "$@"
+  rc=$?
+  [ "$rc" -ne 0 ] && echo "sudo-telefono: run it again WITHOUT -n (plain \"sudo ...\"): the 151 Machine will ask the owner for the password on his screen." >&2
+  exit "$rc"
+}
+# SUDO_TELEFONO=1: i «!comandi» della chat (server/comando-chat.js).
+if { [ "${CLAUDECODE:-}" = "1" ] || [ "${SUDO_TELEFONO:-}" = "1" ]; } && ! (: </dev/tty) 2>/dev/null; then
+  salta=0
+  for a in "$@"; do
+    if [ "$salta" = 1 ]; then salta=0; continue; fi
+    case "$a" in
+      -A|--askpass|-S|--stdin) exec "$REALE" "$@" ;;
+      -n|--non-interactive) senza_chiedere "$@" ;;
+      -u|-g|-h|-p|-C|-r|-t|-T|-U|-D) salta=1 ;;
+      --) break ;;
+      --*) ;;
+      -*) case "$a" in *[AS]*) exec "$REALE" "$@" ;; *n*) senza_chiedere "$@" ;; esac ;;
+      *) break ;;
+    esac
+  done
+  QUI=$(dirname "$(readlink -f "$0")")
+  SUDO_ASKPASS="$QUI/chiedi.js"
+  export SUDO_ASKPASS
+  exec "$REALE" -A "$@"
+fi
+exec "$REALE" "$@"

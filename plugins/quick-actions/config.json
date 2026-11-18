@@ -1,0 +1,7 @@
+{
+  "actions": [
+    { "id": "attach-file",  "label": "File", "type": "special" },
+    { "id": "wrap",         "label": "Wrap", "type": "special" },
+    { "id": "copy-chat",    "label": "Copy", "type": "special" }
+  ]
+}

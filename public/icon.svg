@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <!-- Background radial gradient: deep cosmic purple to darker purple -->
+    <radialGradient id="bgGrad" cx="50%" cy="40%" r="60%" fx="50%" fy="40%">
+      <stop offset="0%" stop-color="#1a0a3e"/>
+      <stop offset="100%" stop-color="#0b0618"/>
+    </radialGradient>
+    <!-- Glow filter for the "151" text -->
+    <filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="8" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <!-- Softer outer glow layer -->
+    <filter id="outerGlow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="18" result="blur"/>
+      <feColorMatrix in="blur" type="matrix"
+        values="0.65 0 0 0 0
+                0    0 0 0 0
+                0    0 1 0 0
+                0    0 0 1 0" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Rounded square background (20% of 512 = ~102px radius) -->
+  <rect x="0" y="0" width="512" height="512" rx="102" ry="102" fill="url(#bgGrad)"/>
+
+  <!-- Subtle inner border -->
+  <rect x="0" y="0" width="512" height="512" rx="102" ry="102"
+        fill="none" stroke="#2d1060" stroke-width="2" opacity="0.6"/>
+
+  <!-- Sparkle dot — top-right -->
+  <circle cx="390" cy="108" r="4" fill="#c4b5fd" opacity="0.85"/>
+  <circle cx="390" cy="108" r="8" fill="#a78bfa" opacity="0.25"/>
+
+  <!-- Sparkle dot — top-left -->
+  <circle cx="132" cy="148" r="2.5" fill="#ddd6fe" opacity="0.7"/>
+  <circle cx="132" cy="148" r="5" fill="#a78bfa" opacity="0.2"/>
+
+  <!-- Sparkle dot — bottom-right -->
+  <circle cx="368" cy="388" r="3" fill="#c4b5fd" opacity="0.6"/>
+  <circle cx="368" cy="388" r="6" fill="#a78bfa" opacity="0.15"/>
+
+  <!-- Outer glow layer behind text -->
+  <text
+    x="256" y="320"
+    font-family="'Arial Black', 'Helvetica Neue', Arial, sans-serif"
+    font-size="210"
+    font-weight="900"
+    text-anchor="middle"
+    fill="#a78bfa"
+    opacity="0.18"
+    filter="url(#outerGlow)"
+  >151</text>
+
+  <!-- Main "151" text with glow -->
+  <text
+    x="256" y="320"
+    font-family="'Arial Black', 'Helvetica Neue', Arial, sans-serif"
+    font-size="210"
+    font-weight="900"
+    text-anchor="middle"
+    fill="#a78bfa"
+    filter="url(#glow)"
+    letter-spacing="-4"
+  >151</text>
+</svg>

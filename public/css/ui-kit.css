@@ -1,0 +1,99 @@
+/* @151/ui — shared design-system kit CSS (P2.2)
+ * ONLY the shared components (overlay / modal / button), built from the
+ * EXISTING design tokens in main.css (v2 token layer). Sections adopt these
+ * then personalize. Do NOT rewrite main.css. */
+
+.ui-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-modal, 100);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4, 16px);
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  animation: ui-fade-in var(--motion-fast, 150ms) var(--ease-out, ease);
+}
+
+.ui-modal {
+  width: min(420px, 100%);
+  max-height: 85vh;
+  overflow-y: auto;
+  background: var(--surface, #14102b);
+  color: var(--text, #e8e4f4);
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.08));
+  border-radius: var(--r-lg, 14px);
+  box-shadow: var(--shadow-lg, 0 12px 32px rgba(0, 0, 0, 0.45));
+  padding: var(--space-6, 24px);
+  font-family: var(--font, system-ui, sans-serif);
+  animation: ui-pop-in var(--motion-base, 220ms) var(--ease-out, ease);
+}
+
+.ui-modal-title {
+  font-size: var(--fs-md, 17px);
+  font-weight: 700;
+  margin-bottom: var(--space-3, 12px);
+}
+
+.ui-modal-body {
+  font-size: var(--fs-sm, 13px);
+  line-height: 1.5;
+  color: var(--text-dim, #a99dd4);
+}
+
+.ui-confirm-text {
+  color: var(--text, #e8e4f4);
+}
+
+.ui-modal-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-2, 8px);
+  margin-top: var(--space-6, 24px);
+  flex-wrap: wrap;
+}
+
+/* Shared button base — sections may restyle via their own scopes. */
+.ui-btn {
+  padding: var(--space-2, 8px) var(--space-4, 16px);
+  border-radius: var(--r-sm, 6px);
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.1));
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text, #e8e4f4);
+  font-family: inherit;
+  font-size: var(--fs-sm, 13px);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--motion-fast, 150ms) var(--ease-out, ease),
+              border-color var(--motion-fast, 150ms) var(--ease-out, ease);
+}
+.ui-btn:hover { background: rgba(255, 255, 255, 0.08); }
+
+.ui-btn-primary {
+  background: rgba(var(--accent-rgb, 139, 92, 246), 0.18);
+  border-color: rgba(var(--accent-rgb, 139, 92, 246), 0.35);
+  color: var(--accent-bright, #a78bfa);
+}
+.ui-btn-primary:hover { background: rgba(var(--accent-rgb, 139, 92, 246), 0.28); }
+
+.ui-btn-ghost {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.1);
+  color: var(--text-dim, #a99dd4);
+}
+.ui-btn-ghost:hover { background: rgba(255, 255, 255, 0.08); }
+
+.ui-btn-danger {
+  background: rgba(248, 113, 113, 0.15);
+  border-color: rgba(248, 113, 113, 0.3);
+  color: #f87171;
+}
+.ui-btn-danger:hover { background: rgba(248, 113, 113, 0.25); }
+
+@keyframes ui-fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes ui-pop-in {
+  from { opacity: 0; transform: translateY(8px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}

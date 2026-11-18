@@ -1,0 +1,26 @@
+{
+  "id": "tool-use-viz",
+  "name": "Tool Use Visualization",
+  "version": "1.0.0",
+  "description": "Real-time activity log showing which tools Claude is using with spinner and elapsed time",
+  "author": "The 151 Machine",
+  "type": "native",
+  "client": "client.js",
+  "hooks": [],
+  "dependencies": [],
+  "settings": {
+    "detailLevel": {
+      "type": "select",
+      "label": "Detail level",
+      "description": "How much tool info to show",
+      "default": "full",
+      "options": ["full", "minimal", "hidden"]
+    },
+    "maxVisibleEntries": {
+      "type": "number",
+      "label": "Max visible entries",
+      "description": "Entries before collapsing older ones",
+      "default": 7
+    }
+  }
+}

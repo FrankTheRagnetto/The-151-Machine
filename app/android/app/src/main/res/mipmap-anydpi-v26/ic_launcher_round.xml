@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Icona della famiglia 151 (11/10/2026): sorgente in ~/Projects/151-art/design/icone -->
+<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+    <background android:drawable="@drawable/icona_sfondo" />
+    <foreground android:drawable="@drawable/icona_simbolo" />
+    <monochrome android:drawable="@drawable/icona_simbolo" />
+</adaptive-icon>

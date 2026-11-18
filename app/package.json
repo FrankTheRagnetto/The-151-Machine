@@ -1,0 +1,22 @@
+{
+  "name": "151-machine-app",
+  "version": "1.0.0",
+  "description": "The 151 Machine — Android app (Capacitor)",
+  "private": true,
+  "dependencies": {
+    "@capacitor/android": "^7.0.0",
+    "@capacitor/app": "^8.1.0",
+    "@capacitor/app-launcher": "^8.0.1",
+    "@capacitor/browser": "^8.0.3",
+    "@capacitor/cli": "^7.0.0",
+    "@capacitor/core": "^7.0.0",
+    "@capacitor/keyboard": "^8.0.2",
+    "@capacitor/local-notifications": "^8.0.2",
+    "@capacitor/network": "^8.0.1",
+    "@capacitor/splash-screen": "^8.0.1",
+    "@capacitor/status-bar": "^8.0.2",
+    "@capawesome/capacitor-file-picker": "^8.0.2",
+    "@capgo/capacitor-native-biometric": "^7.6.0",
+    "capacitor-voice-recorder": "^7.0.6"
+  }
+}

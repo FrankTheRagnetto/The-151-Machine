@@ -1,0 +1,34 @@
+{
+  "id": "chime-notifications",
+  "name": "Chime & Notifications",
+  "version": "1.0.0",
+  "description": "Done chime sound and push notifications when Claude finishes responding",
+  "author": "The 151 Machine",
+  "type": "native",
+  "client": "client.js",
+  "hooks": [],
+  "dependencies": [],
+  "settings": {
+    "chimeEnabled": {
+      "type": "select",
+      "label": "Done chime",
+      "description": "Play sound when response completes",
+      "default": "on",
+      "options": ["on", "off"]
+    },
+    "notificationsEnabled": {
+      "type": "select",
+      "label": "Push notifications",
+      "description": "Notify when response completes in background",
+      "default": "on",
+      "options": ["on", "off"]
+    },
+    "hapticEnabled": {
+      "type": "select",
+      "label": "Haptic feedback",
+      "description": "Vibration when response completes",
+      "default": "on",
+      "options": ["on", "off"]
+    }
+  }
+}

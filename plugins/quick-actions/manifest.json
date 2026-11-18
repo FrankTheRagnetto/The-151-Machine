@@ -1,0 +1,13 @@
+{
+  "id": "quick-actions",
+  "name": "Quick Actions",
+  "version": "1.0.0",
+  "description": "One-tap toolbar buttons for common operations",
+  "author": "The 151 Machine",
+  "type": "native",
+  "client": "client.js",
+  "server": "server.js",
+  "hooks": [],
+  "dependencies": [],
+  "settings": {}
+}

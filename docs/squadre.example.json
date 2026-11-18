@@ -1,0 +1,13 @@
+{
+  "teams": {
+    "notes": { "title": "Notes", "command": "/notes", "color": "tools", "icon": "fileText" }
+  },
+  "super": {
+    "lead":     { "on": true,  "color": "#facc15", "icon": "sun",    "name": "Lead",     "pos": 0, "special": true },
+    "writer":   { "on": true,  "color": "#38bdf8", "icon": "fileText", "name": "Writer", "pos": 1 },
+    "reviewer": { "on": false, "color": "#34d399", "icon": "search", "name": "Reviewer", "pos": 2 }
+  },
+  "spawnModels": { "lead": "opus", "writer": "opus" },
+  "dictationWords": "commit, branch, deploy, plugin, server",
+  "titleAreas": "Writing, Code review, Home lab"
+}

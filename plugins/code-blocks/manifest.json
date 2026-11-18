@@ -1,0 +1,19 @@
+{
+  "id": "code-blocks",
+  "name": "Code Block Enhancements",
+  "version": "1.0.0",
+  "description": "Language badges, copy buttons, and auto-collapse for code blocks",
+  "author": "The 151 Machine",
+  "type": "native",
+  "client": "client.js",
+  "hooks": [],
+  "dependencies": [],
+  "settings": {
+    "collapseThreshold": {
+      "type": "number",
+      "label": "Auto-collapse threshold",
+      "description": "Lines before auto-collapse (0 = never)",
+      "default": 8
+    }
+  }
+}

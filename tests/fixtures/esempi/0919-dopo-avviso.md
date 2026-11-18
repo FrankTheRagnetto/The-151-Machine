@@ -1,0 +1,1 @@
+Ho corretto la regola: adesso la scheda del progetto viene aggiornata insieme al codice, come chiedeva il controllo.

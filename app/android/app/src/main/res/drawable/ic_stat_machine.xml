@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Icona piccola delle notifiche (11/10/2026): sagoma bianca dello schermo col cursore,
+     da ~/Projects/151-art/design/icone/machine-simbolo.svg. Android la colora con
+     setColor (#a78bfa, l'accento). Unica icona di TUTTE le notifiche dell'app. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="24dp" android:height="24dp" android:viewportWidth="64" android:viewportHeight="64">
+    <group android:translateX="-22" android:translateY="-21.75">
+        <path android:fillColor="#FFFFFFFF" android:fillType="evenOdd" android:pathData="M32,28 H76 A7,7 0 0 1 83,35 V63 A7,7 0 0 1 76,70 H32 A7,7 0 0 1 25,63 V35 A7,7 0 0 1 32,28 Z M33,32 H75 A4,4 0 0 1 79,36 V62 A4,4 0 0 1 75,66 H33 A4,4 0 0 1 29,62 V36 A4,4 0 0 1 33,32 Z" />
+        <path android:fillColor="#FFFFFFFF" android:pathData="M32,32 H76 A3,3 0 0 1 79,35 V35 A3,3 0 0 1 76,38 H32 A3,3 0 0 1 29,35 V35 A3,3 0 0 1 32,32 Z" />
+        <path android:fillColor="#FFFFFFFF" android:pathData="M45.5,53 H52.5 A1.5,1.5 0 0 1 54,54.5 V54.5 A1.5,1.5 0 0 1 52.5,56 H45.5 A1.5,1.5 0 0 1 44,54.5 V54.5 A1.5,1.5 0 0 1 45.5,53 Z" />
+        <path android:fillColor="#FFFFFFFF" android:pathData="M48,70 H60 L63,76 H45 Z" />
+        <path android:fillColor="#FFFFFFFF" android:pathData="M39.75,76 H68.25 A1.75,1.75 0 0 1 70,77.75 V77.75 A1.75,1.75 0 0 1 68.25,79.5 H39.75 A1.75,1.75 0 0 1 38,77.75 V77.75 A1.75,1.75 0 0 1 39.75,76 Z" />
+        <path android:strokeColor="#FFFFFFFF" android:strokeWidth="2.8" android:strokeLineCap="round" android:strokeLineJoin="round" android:pathData="M35,45 L41,50 L35,55" />
+    </group>
+</vector>

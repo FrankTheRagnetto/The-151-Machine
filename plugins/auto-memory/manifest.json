@@ -1,0 +1,8 @@
+{
+  "id": "auto-memory",
+  "name": "Auto Memory",
+  "version": "0.1.0",
+  "description": "Background long-term memory: quietly notes durable facts about you during chats and recalls them in future sessions. Off until MEMORY_AUTO=1.",
+  "category": "internal",
+  "hooks": ["onResponseComplete"]
+}

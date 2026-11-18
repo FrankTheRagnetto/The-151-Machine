@@ -1,0 +1,101 @@
+[
+  {
+    "id": "auto-memory",
+    "name": "Auto Memory",
+    "version": "0.1.0",
+    "description": "Background long-term memory: quietly notes durable facts about you during chats and recalls them in future sessions. Off until MEMORY_AUTO=1.",
+    "type": "community",
+    "category": "internal",
+    "icon": null,
+    "enabled": true,
+    "hasClient": false
+  },
+  {
+    "id": "auto-skills",
+    "name": "Auto Skills",
+    "version": "0.1.0",
+    "description": "Self-writing skills: after real multi-step work, quietly writes itself a reusable recipe as a draft for later review. Off until SKILLS_AUTO=1.",
+    "type": "community",
+    "category": "internal",
+    "icon": null,
+    "enabled": true,
+    "hasClient": false
+  },
+  {
+    "id": "backup",
+    "name": "Backup",
+    "version": "1.0.0",
+    "description": "Keeps the backup disks identical copies of the Box",
+    "type": "native",
+    "category": "app",
+    "icon": "<svg viewBox=\"0 0 24 24\" width=\"20\" height=\"20\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"3\" y=\"13\" width=\"18\" height=\"8\" rx=\"2\"/><path d=\"M7 17h.01\"/><path d=\"M12 3v7\"/><polyline points=\"8.5 7 12 10.5 15.5 7\"/></svg>",
+    "enabled": true,
+    "hasClient": true
+  },
+  {
+    "id": "chime-notifications",
+    "name": "Chime & Notifications",
+    "version": "1.0.0",
+    "description": "Done chime sound and push notifications when Claude finishes responding",
+    "type": "native",
+    "category": "utility",
+    "icon": null,
+    "enabled": true,
+    "hasClient": true
+  },
+  {
+    "id": "code-blocks",
+    "name": "Code Block Enhancements",
+    "version": "1.0.0",
+    "description": "Language badges, copy buttons, and auto-collapse for code blocks",
+    "type": "native",
+    "category": "utility",
+    "icon": null,
+    "enabled": true,
+    "hasClient": true
+  },
+  {
+    "id": "quick-actions",
+    "name": "Quick Actions",
+    "version": "1.0.0",
+    "description": "One-tap toolbar buttons for common operations",
+    "type": "native",
+    "category": "utility",
+    "icon": null,
+    "enabled": true,
+    "hasClient": true
+  },
+  {
+    "id": "super-agents",
+    "name": "Super agents",
+    "version": "1.0.0",
+    "description": "Choose the agents at the top, their color and icon",
+    "type": "native",
+    "category": "app",
+    "icon": "<svg viewBox=\"0 0 24 24\" width=\"20\" height=\"20\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><polygon points=\"12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2\"/></svg>",
+    "enabled": true,
+    "hasClient": true
+  },
+  {
+    "id": "tool-use-viz",
+    "name": "Tool Use Visualization",
+    "version": "1.0.0",
+    "description": "Real-time activity log showing which tools Claude is using with spinner and elapsed time",
+    "type": "native",
+    "category": "utility",
+    "icon": null,
+    "enabled": true,
+    "hasClient": true
+  },
+  {
+    "id": "updates",
+    "name": "Updates",
+    "version": "2.0.0",
+    "description": "Update channels of this machine, with the command to copy for each",
+    "type": "native",
+    "category": "app",
+    "icon": "<svg viewBox=\"0 0 24 24\" width=\"20\" height=\"20\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M21 2v6h-6\"/><path d=\"M3 12a9 9 0 0 1 15-6.7L21 8\"/><path d=\"M3 22v-6h6\"/><path d=\"M21 12a9 9 0 0 1-15 6.7L3 16\"/></svg>",
+    "enabled": true,
+    "hasClient": true
+  }
+]

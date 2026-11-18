@@ -1,0 +1,98 @@
+node_modules/
+sessions.json
+config.json
+.env
+*.apk
+app/android/app/build/
+app/android/.gradle/
+*.log
+uploads/
+plugins/_registry.json
+plugins/**/.tokens.json
+plugins/**/.spotify-tokens.json
+plugins/**/.playwright-data/
+plugins/**/.browser-session/
+plugins/**/.downloads/
+lab-reviews.json
+server/daemon/
+
+
+# Tool artifacts
+.superpowers/
+docs/superpowers/
+
+# Auto-generated state
+server/.changelog-last-hash
+server/build-hash.txt
+tmp/
+
+# Audio / voice blobs (2GB+ culprit — whisper DLLs + recorded audio)
+*.webm
+*.wav
+*.ogg
+*.mp3
+transcriptions/
+whisper-service/*.dll
+whisper-service/*.bin
+whisper-service/*.cuda
+**/voice-input-temp/
+
+# Piper TTS voice models (download on setup, not committed)
+server/tts-models/*.onnx
+server/tts-models/*.onnx.json
+
+# Piper TTS native binary + voices (download on setup, not committed)
+bin/
+.cache/
+
+# Phase 6 session-host persistence — runtime-only
+data/
+
+# Session/user runtime state
+server/mcp-configs/*.json
+server/attachments/
+
+
+# Scratch render outputs
+public/wallpaper-busy*.png
+public/calibration.png
+public/row1_crop.png
+public/slot_compare.png
+.gitignore_check
+lab-reviews.backup-*.json
+
+# Runtime usage log + ad-hoc backup artifacts (never commit)
+server/.usage-log.jsonl
+*.bak
+*.bak.*
+
+# Android signing keystore backup — NEVER commit (would leak the signing key)
+app/.signing-key-backup/
+
+# Python bytecode cache
+__pycache__/
+*.pyc
+
+# Local Claude Code session state (settings.local.json, locks, worktrees)
+.claude/
+
+# Per-machine runtime state — each box (PC/Pi) keeps its own; deploy already
+# excludes these from sync, so they must never be tracked or they churn on
+# every commit and overwrite each machine's saved state on pull.
+plugins/**/.state.json
+plugins/**/.storage-state.json
+# system/ is pure per-machine runtime state (restart journal + culprit,
+# post-deploy-verify one-shot marker, heartbeat) — never tracked on any box.
+system/
+whisper-service/*.pid
+
+# runtime artifacts
+public/_mockups/
+
+# Boot-regenerated mirror of plugins/*/{js,css,html} (plugin-loader
+# syncClientFiles). Source of truth is plugins/ — tracking the mirror only
+# produced double diffs and orphaned dead files (2026-08-12 audit F3).
+public/plugins/
+
+# Vecchie config MCP dell'era Windows (node.exe): nessuno le legge (pulizia 2026-10-12)
+server/mcp-configs/

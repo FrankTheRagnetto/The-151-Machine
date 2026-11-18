@@ -1,0 +1,4566 @@
+﻿
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    button, input, textarea, select { font-family: inherit; }
+
+    :root {
+      /* === SAFE AREA â€” works on iOS via env(), on Android via JS-injected var === */
+      --top-inset: max(env(safe-area-inset-top, 0px), var(--android-inset-top, 0px));
+      --bottom-inset: env(safe-area-inset-bottom, 0px);
+      /* Updated by input.js from visualViewport + Capacitor Keyboard events.
+         Used as a defensive lift for the composer when Android adjustResize
+         doesn't fire on app resume (keyboard already open before backgrounding). */
+      --keyboard-height: 0px;
+      /* === PALETTE (default: Purple Cosmos) === */
+      --bg: #08061a;
+      --bg-deep: #060414;
+      --surface: rgba(14, 10, 32, 0.75);
+      --surface2: rgba(26, 18, 56, 0.45);
+      --surface-tool: rgba(18, 12, 40, 0.7);
+      --surface-code: rgba(4, 2, 14, 0.92);
+      --border: rgba(var(--border-rgb), 0.15);
+      --border-bright: rgba(var(--border-rgb), 0.3);
+      --glow-line: rgba(var(--accent-bright-rgb), 0.45);
+      --glow-line-cyan: rgba(var(--cyan-rgb), 0.25);
+      --text: #e8e4f4;
+      --text-dim: #a99dd4;
+      --text-code: #d4cef0;
+      --accent: #a78bfa;
+      --accent2: #c084fc;
+      --accent-bright: #b99cff;
+      --accent-glow: rgba(var(--glow-rgb), 0.12);
+      --cyan: #7dd3fc;
+      --cyan-dim: rgba(var(--cyan-rgb), 0.08);
+      --user-bg: linear-gradient(135deg, rgba(110, 65, 210, 0.75) 0%, rgba(140, 90, 240, 0.6) 100%);
+      --assistant-bg: rgba(10, 7, 24, 0.65);
+      --green: #34d399;
+      --orange: #fbbf24;
+      --red: #f87171;
+      --radius: 18px;
+      /* Ambient blob colors (themeable) */
+      --blob-top: rgba(var(--accent-bright-rgb),0.07);
+      --blob-bottom: rgba(var(--teal-rgb),0.05);
+      --meta-theme: #08061a;
+      /* RGB channels for themed opacity â€” usage: rgba(var(--accent-rgb), 0.15) */
+      --accent-rgb: 139, 92, 246;
+      --border-rgb: 130, 100, 220;
+      /* ONE divider line for the whole top strip (2026-08-20 round 3, punti 5+6).
+         Both the boundary under the pills zone and the boundary under the
+         session header use this exact pair of tokens, so the two lines are
+         identical by construction and can never drift apart again. The old
+         values were an effectively invisible rgba(255,255,255,0.04) and an
+         equally invisible rgba(var(--border-rgb),0.1).
+         ROUND 4 punto 1: at 0.28/1px they read as hairlines on the phone, so
+         BOTH dimensions move together — 0.28 → 0.42 alpha and 1px → 2px. The
+         width is a token too, otherwise the two call sites (a border-bottom and
+         an ::after height) would each need editing by hand and would drift. */
+      --divider: rgba(var(--border-rgb), 0.42);
+      --divider-w: 2px;
+      --glow-rgb: 147, 120, 240;
+      --accent-bright-rgb: 167, 139, 250;
+      --cyan-rgb: 125, 211, 252;
+      --teal-rgb: 45, 212, 191;
+      --shadow-rgb: 88, 28, 135;
+      /* Status channels, same values as --green/--orange/--red above, for tinted
+         fills and borders (Updates plugin, 16/10/2026). Change both together. */
+      --green-rgb: 52, 211, 153;
+      --orange-rgb: 251, 191, 36;
+      --red-rgb: 248, 113, 113;
+      /* === COLORE DELLA SCHEDA SPECIALE === */
+      /* Il valore vero lo mette applySuperAgents (sessions.js) dal colore del
+         super con "special": true del file delle squadre. Gli altri super
+         agenti hanno --agent-<chiave> e --agent-<chiave>-rgb, sempre da lì. */
+      --agent-special: #facc15;
+      --agent-special-rgb: 250, 204, 21;
+      --mono: 'Cascadia Code', 'Fira Code', 'Courier New', monospace;
+      --font: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+
+      /* === DESIGN TOKENS v2 (added 2026-05-23, Stage 1 of UI refresh) === */
+      /* Additive — existing tokens above unchanged. Stages 2-8 migrate to these. */
+
+      /* Spacing scale (4px base unit) */
+      --space-1: 4px;
+      --space-2: 8px;
+      --space-3: 12px;
+      --space-4: 16px;
+      --space-5: 20px;
+      --space-6: 24px;
+      --space-7: 32px;
+      --space-8: 48px;
+
+      /* Radius scale */
+      --r-xs: 4px;
+      --r-sm: 6px;
+      --r-md: 10px;
+      --r-lg: 14px;
+      --r-xl: 18px;    /* matches existing --radius */
+      --r-pill: 999px;
+
+      /* Shadow scale */
+      --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.25);
+      --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.35);
+      --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.45);
+      --shadow-glow: 0 0 16px rgba(var(--glow-rgb), 0.25);
+
+      /* Motion */
+      --motion-fast: 150ms;
+      --motion-base: 220ms;
+      --motion-slow: 360ms;
+      --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+      --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+
+      /* Z-index scale */
+      --z-base: 1;
+      --z-sticky: 10;
+      --z-overlay: 50;
+      --z-modal: 100;
+      --z-toast: 200;
+      /* Popovers that must sit above the sidebars (851) — the usage popup
+         opens from the Sessions heading too (2026-10-16). */
+      --z-popover: 900;
+
+      /* Font size scale */
+      --fs-xs: 11px;
+      --fs-sm: 13px;
+      --fs-base: 15px;   /* matches body */
+      --fs-md: 17px;
+      --fs-lg: 20px;
+      --fs-xl: 24px;
+    }
+
+    html, body {
+      height: 100%;
+      height: 100vh; /* NOT dvh â€” dvh shrinks when keyboard opens, hiding the header */
+      width: 100%;
+      max-width: 100vw;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      font-size: 15px;
+      line-height: 1.5;
+      overflow: hidden;
+      -webkit-user-select: text;
+      user-select: text;
+      transition: background 0.5s ease, color 0.4s ease;
+    }
+
+    /* === V2 GLASS â€” Ambient color blobs (themed via CSS vars) === */
+    body::before {
+      content: '';
+      position: fixed;
+      width: 600px; height: 600px;
+      top: -180px; right: -120px;
+      background: radial-gradient(circle, var(--blob-top) 0%, transparent 65%);
+      pointer-events: none;
+      z-index: 0;
+      transition: background 0.6s ease;
+    }
+    body::after {
+      content: '';
+      position: fixed;
+      width: 550px; height: 550px;
+      bottom: -150px; left: -100px;
+      background: radial-gradient(circle, var(--blob-bottom) 0%, transparent 65%);
+      pointer-events: none;
+      z-index: 0;
+      transition: background 0.6s ease;
+    }
+    /* Ambient atmosphere layer â€” Purple Cosmos (permanent) */
+    #ambient-bg {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      background:
+        radial-gradient(ellipse at 75% 5%, rgba(120,60,220,0.1) 0%, transparent 50%),
+        radial-gradient(ellipse at 15% 85%, rgba(30,180,200,0.07) 0%, transparent 45%),
+        radial-gradient(circle at 90% 60%, rgba(180,100,255,0.04) 0%, transparent 35%),
+        radial-gradient(circle at 5% 30%, rgba(80,40,160,0.05) 0%, transparent 30%);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .message.new-msg { animation: none; }
+    }
+
+    /* [2026-09-30] Telefono nativo: la cornice È l'area visibile sopra la
+       tastiera (altezza e posizione dal visualViewport, js/input.js fitShell).
+       Niente 100vh, niente margini che rincorrono la tastiera. */
+    body.vv-shell #app {
+      position: fixed;
+      left: 0;
+      right: 0;
+      top: var(--app-top, 0px);
+      height: var(--app-h, 100vh) !important;
+    }
+
+    #app {
+      display: flex;
+      height: 100%;
+      height: 100vh; /* NOT dvh â€” dvh shrinks when keyboard opens, hiding the header */
+      width: 100%;
+      max-width: 100vw;
+      overflow: hidden;
+      position: relative;
+      isolation: isolate; /* stacking context without z-index â€” sidebars still layer above */
+    }
+
+    /* --- Sidebar --- */
+    #sidebar {
+      position: fixed;
+      top: 0; left: 0; bottom: 0;
+      width: 280px;
+      background: rgba(8, 6, 22, 0.85);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-right: 1px solid rgba(var(--border-rgb), 0.1);
+      transform: translateX(-100%);
+      transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+      z-index: 851;
+      display: flex;
+      flex-direction: column;
+    }
+
+    #sidebar.open { transform: translateX(0); }
+
+    /* Round 3 (2026-08-16): when the on-screen keyboard is up (visualViewport /
+       Capacitor tracked by input.js → --keyboard-height + body.keyboard-open),
+       lift the fixed sidebar's bottom above it. The session list then scrolls
+       within the visible strip, so a Super-Agent compose box (textarea + Send)
+       stays anchored and reachable instead of the whole screen being shoved up.
+       Desktop ≥1024px: #sidebar is position:relative — bottom has no effect. */
+    body.keyboard-open #sidebar { bottom: var(--keyboard-height, 0px); }
+
+    /* Desktop: persistent sidebar, no overlay needed */
+    @media (min-width: 1024px) {
+      #sidebar {
+        position: relative;
+        transform: none;
+        flex-shrink: 0;
+        z-index: auto;
+      }
+      #sidebar-overlay {
+        display: none !important;
+      }
+      #app {
+        flex-direction: row;
+      }
+      #header #menu-btn {
+        display: none;
+      }
+    }
+
+    #sidebar-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(4, 2, 12, 0.45);
+      backdrop-filter: blur(2px);
+      -webkit-backdrop-filter: blur(2px);
+      z-index: 850;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+    }
+
+    #sidebar-overlay.show {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    /* Sidebar search removed 2026-06-28 — useless for the session list. */
+
+    /* #sidebar-header and #new-session-btn removed 2026-04-14. #sidebar-header
+       came back 2026-10-16 as the SESSIONS heading (.panel-header, Slot
+       System section): it pads the safe-area inset now, not #session-list. */
+
+    #sidebar-footer {
+      padding: 10px 16px calc(env(safe-area-inset-bottom, 0px) + 14px);
+      border-top: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Inner groups â€” only one is visible at a time (driven by body class) */
+    #sidebar-footer .footer-sessions {
+      display: flex;
+      align-items: stretch;
+      gap: 8px;
+    }
+
+    /* Scoped to .footer-sessions ON PURPOSE (2026-08-19): the New Session
+       compose panel is inserted as the FIRST CHILD of #sidebar-footer, so a
+       generic "#sidebar-footer button" (specificity 1,0,1) was beating
+       .agent-compose-send / .agent-compose-model-btn (0,1,0) and repainting
+       them at 16px/10px with the footer's border and colour â€” which is why the
+       panel looked different from the identical one on the Super-Agent cards.
+       Keep these two rules bound to the real footer row and nothing else. */
+    #sidebar-footer .footer-sessions button {
+      background: rgba(var(--accent-bright-rgb), 0.08);
+      border: 1px solid var(--border);
+      color: var(--text-dim);
+      font-size: 16px;
+      padding: 10px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.15s;
+      position: relative;
+    }
+
+    #sidebar-footer .footer-sessions button:active {
+      background: rgba(var(--accent-bright-rgb), 0.18);
+      transform: scale(0.96);
+    }
+
+    /* New Session button — prominent primary action.
+       SPECIFICITY FIX (2026-08-20 round 2, punto 7). Commit 8898048 added
+       `#sidebar-footer .footer-sessions button` above to stop a generic footer
+       rule repainting the compose panel. That selector is (1,1,1); this one was
+       (1,1,0), so the new rule silently WON on background, border, colour,
+       font-size, padding and border-radius — which is exactly how New Session
+       lost its gradient and turned into a small grey 16px/10px box like its
+       neighbours. Qualifying with .footer-sessions brings this to (1,2,1) so the
+       primary action outranks the row default again, as it always should have.
+       the owner also asked for it BIGGER and in the model-pill colour, so the accent
+       is now --accent-rgb (the token #header-model-chip uses) instead of
+       --accent-bright-rgb, at 17px / 13px 16px.
+       HEIGHT TRIM (2026-08-20 round 3, punto 4): 17px of vertical padding made
+       it 60px tall, which the owner read as "un filo troppo alto". 13px brings the
+       row to 52px (13 + 24 glyph line + 13 + 2 border) — still clearly the
+       primary action, and a round number the square trash button can match. */
+    /* [2026-09-10] Lo stesso bottone vive in DUE posti: il piede della barra
+       laterale e la schermata «Nessuna sessione attiva». Una sola regola con due
+       selettori, non una copia — così restano identici per costruzione e non
+       divergono al primo ritocco. Le sole differenze di scatola (il piede lo
+       allarga, il vuoto lo tiene stretto e centrato) stanno nel blocco dedicato
+       subito sotto. */
+    #sidebar-footer .footer-sessions button.new-session-btn,
+    #empty-state button.new-session-btn {
+      flex: 1 1 auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 13px 16px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, rgba(var(--accent-rgb), 0.32), rgba(var(--accent-rgb), 0.14));
+      border: 1px solid rgba(var(--accent-rgb), 0.55);
+      color: var(--accent-bright, var(--accent));
+      font-weight: 700;
+      font-size: 17px;
+      letter-spacing: 0.3px;
+      box-shadow: 0 2px 10px rgba(var(--accent-rgb), 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    }
+    /* #empty-state è un flex a COLONNA: `flex: 1 1 auto` ereditato dalla regola
+       condivisa qui sopra allungherebbe il bottone per tutta l'altezza libera.
+       Lo si rimette a scatola propria — nessun colore, nessun bordo, nessuna
+       animazione toccati: solo la geometria del contenitore diverso. */
+    #empty-state button.new-session-btn {
+      flex: 0 0 auto;
+      width: auto;
+      min-width: 200px;
+      max-width: 280px;
+      cursor: pointer;
+      margin-top: 4px;
+    }
+    #sidebar-footer .footer-sessions button.new-session-btn:hover,
+    #empty-state button.new-session-btn:hover {
+      background: linear-gradient(135deg, rgba(var(--accent-rgb), 0.42), rgba(var(--accent-rgb), 0.22));
+      border-color: rgba(var(--accent-rgb), 0.7);
+      box-shadow: 0 4px 16px rgba(var(--accent-rgb), 0.26), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    }
+    #sidebar-footer .footer-sessions button.new-session-btn .ns-plus,
+    #empty-state button.new-session-btn .ns-plus {
+      font-size: 24px;
+      font-weight: 400;
+      line-height: 1;
+      opacity: 0.95;
+    }
+    #sidebar-footer .footer-sessions button.new-session-btn .ns-label,
+    #empty-state button.new-session-btn .ns-label {
+      font-size: 17px;
+    }
+
+    /* Trash button — SQUARE (2026-08-20 round 3, punto 4).
+       Root cause of "too tall": .footer-sessions is `align-items: stretch`, so
+       the trash button inherited the FULL height of its taller New Session
+       neighbour while keeping only its own icon width — a 40×60 slab. Pinning
+       an explicit 52×52 box (the new row height) plus `align-self: center`
+       opts it out of the stretch, so it is square by construction and stays
+       square whatever the neighbour's padding becomes. */
+    #sidebar-footer .footer-sessions button.trash-btn {
+      flex: 0 0 auto;
+      align-self: center;
+      width: 52px;
+      height: 52px;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 12px;
+    }
+
+    /* update-btn removed â€” merged into #sync-btn in header */
+
+    /* The safe-area inset is padded by #sidebar-header above it (2026-10-16). */
+    #session-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: var(--space-2);
+    }
+
+    .session-group {
+      margin-bottom: 12px;
+    }
+    .session-group + .session-group {
+      margin-top: 16px;
+      padding-top: 14px;
+      border-top: 1px solid rgba(var(--border-rgb), 0.12);
+    }
+    .session-group-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--text-dim);
+      padding: 4px 12px 8px;
+      opacity: 0.8;          /* 12/10: 0.7 dava 4,3:1 — sotto 4,5 */
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .session-group-label .sg-count {
+      margin-left: auto;
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--text-dim);
+      /* 12/10: niente opacità sua — sommata a quella dell'etichetta faceva 2,3:1 */
+      letter-spacing: 0.5px;
+    }
+    /* Super-Agents mini status icons (2026-08-16, replaces the sg-count number
+       in the fleet label): sun/scale/brain. Light grey when idle — visible but
+       nowhere near white — lit with the agent's own color when its session is
+       LIVE (.lit set by renderSessionList). */
+    .session-group-label .sg-icons {
+      margin-left: auto;
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      /* The label sets letter-spacing:0.8px for its uppercase text. That spacing
+         is also applied AFTER each inline-level child here, so the three icons
+         were pushed apart by 7.8px instead of 7px and the whole cluster drifted
+         left of its margin. Reset it — these are glyphs, not letters.
+         line-height:1 kills the same class of half-pixel baseline drift. */
+      letter-spacing: 0;
+      line-height: 1;
+    }
+    /* ONE source of truth for the mini-icon size (2026-08-20 round 2, punto 2):
+       the box and the svg inside it must never be set to two different numbers,
+       which is how they drift apart. */
+    .sg-icons { --sg-size: 13px; }
+    .sg-icons .sg-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: var(--sg-size);
+      height: var(--sg-size);
+      flex: 0 0 auto;
+      color: rgba(148, 163, 184, 0.55);
+      transition: color 0.2s;
+    }
+    .sg-icons .sg-icon svg {
+      width: var(--sg-size);
+      height: var(--sg-size);
+      display: block;
+    }
+
+    .session-group-empty {
+      padding: 6px 14px 10px;
+      font-size: 11px;
+      color: var(--text-dim);
+      opacity: 0.35;
+      font-style: italic;
+      letter-spacing: 0.3px;
+    }
+
+    .session-item {
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 14px;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: transform 0.25s cubic-bezier(0.32, 0.72, 0, 1), background 0.15s, border-color 0.15s, box-shadow 0.15s;
+      margin-bottom: 6px;
+      background: rgba(255, 255, 255, 0.025);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-left: 3px solid transparent;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+      z-index: 1;
+    }
+
+    .session-item:active { transform: scale(0.97); }
+    .session-item:hover {
+      background: rgba(255, 255, 255, 0.06);
+      border-color: rgba(255, 255, 255, 0.1);
+    }
+
+    /* Status left border colors */
+    .session-item.idle-session { border-left-color: var(--accent); }
+    .session-item.busy-session { border-left-color: var(--cyan); }
+
+    /* Team color overrides for left border */
+    .session-item.team-151 { border-left-color: var(--orange); }
+    .session-item.team-tools { border-left-color: var(--accent); }
+    .session-item.team-spotify { border-left-color: var(--green); }
+
+    /* ACTIVE (current) session — full-bleed surround edge-to-edge.
+       Default accent is purple; the special-card override below recolors it.
+       The squared, panel-wide shape is what distinguishes it from a normal
+       (inset, rounded) Waiting card that also uses the purple glow. */
+    .session-item.active {
+      --bleed-rgb: var(--accent-bright-rgb);
+      /* Card round 1 (2026-08-16): the side stripes were nominally 4px+4px but
+         the LEFT one sat flush at x=0 — the physical (curved) screen edge ate
+         it, so left read thinner than right. Inset the bleed 2px per side and
+         thicken both stripes to 5px: equal, fully visible. Content x offset
+         stays ~26px like a normal card (2+5+19). */
+      margin-left: calc(-1 * var(--space-2) + 2px);
+      margin-right: calc(-1 * var(--space-2) + 2px);
+      padding-left: calc(11px + var(--space-2));
+      padding-right: calc(11px + var(--space-2));
+      border-radius: 0;
+      border-top: 1px solid rgba(var(--bleed-rgb), 0.4);
+      border-bottom: 1px solid rgba(var(--bleed-rgb), 0.4);
+      border-left: 5px solid rgb(var(--bleed-rgb));
+      border-right: 5px solid rgb(var(--bleed-rgb));
+      background: linear-gradient(90deg, rgba(var(--bleed-rgb), 0.32) 0%, rgba(var(--bleed-rgb), 0.14) 50%, rgba(var(--bleed-rgb), 0.32) 100%);
+      box-shadow: inset 0 0 0 1px rgba(var(--bleed-rgb), 0.45), 0 0 20px rgba(var(--bleed-rgb), 0.24);
+    }
+    /* Special card, when current → its own color full-bleed instead of purple. Border
+       widths restated here because the later .session-item.special rule
+       (4px live-card stripes) would otherwise win over .active's 5px. */
+    .session-item.special.active {
+      --bleed-rgb: var(--agent-special-rgb);
+      border-left: 5px solid rgb(var(--bleed-rgb));
+      border-right: 5px solid rgb(var(--bleed-rgb));
+    }
+    /* Fleet agents, when current → their own aura instead of the generic purple
+       (Fix 4): the rule per agent is generated by superCssAggiunti (sessions.js),
+       which repoints --bleed-rgb. */
+
+    .session-item.active .session-title {
+      color: #ffffff;
+      font-weight: 700;
+    }
+    .session-item.special.active .session-title { color: #fff7d6; }
+    .session-item.active .session-preview {
+      color: var(--text);
+      opacity: 0.75;
+    }
+    .session-item.active .session-time {
+      color: var(--accent-bright);
+      opacity: 0.9;
+    }
+
+    /* Session dot â€” kept for grid view, hidden in list view */
+    .session-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .session-dot.idle {
+      background: var(--accent);
+      box-shadow: 0 0 6px rgba(var(--accent-bright-rgb), 0.3);
+    }
+    .session-dot.busy {
+      background: #f0abfc;
+      box-shadow: 0 0 6px rgba(240, 171, 252, 0.6);
+    }
+    .session-dot.error {
+      background: var(--red);
+      box-shadow: 0 0 6px rgba(248, 113, 113, 0.5);
+    }
+    .session-dot.offline {
+      background: #6b7280;
+      box-shadow: 0 0 4px rgba(107, 114, 128, 0.4);
+    }
+    .session-dot.wrapping {
+      background: var(--orange);
+      box-shadow: 0 0 6px rgba(251, 191, 36, 0.6);
+    }
+
+    /* Team-colored dots (grid view) */
+
+    .session-dot.team-151 { background: var(--orange); box-shadow: 0 0 6px rgba(251, 191, 36, 0.3); }
+    .session-dot.team-tools { background: var(--accent); box-shadow: 0 0 6px rgba(var(--accent-bright-rgb), 0.3); }
+    .session-dot.team-spotify { background: var(--green); box-shadow: 0 0 6px rgba(52, 211, 153, 0.3); }
+
+    /* [29/10/2026 BATTERIA, il proprietario: «colore fisso, se fatto bene gasa uguale»]
+       Niente animazioni infinite per dire «sta lavorando»: una sola tiene la
+       WebView a 120 fotogrammi/s anche a schermo fermo (misurato su un telefono vero:
+       ~147% di un core contro ~12%). Lo stato «vivo» è acceso FISSO, con un
+       alone. Prova: tests/animazioni-ferme.test.js. */
+
+    .session-info { flex: 1; min-width: 0; }
+    .session-header {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 6px;
+      min-width: 0;
+    }
+    .session-title { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; min-width: 0; }
+    .session-time { font-size: 10px; color: var(--text-dim); opacity: 0.7; flex-shrink: 0; }
+    /* Model as a PILL on the session card (2026-08-20). Kept as an add-on class
+       so every team/status colour rule already written for .session-time still
+       wins on the text colour — only the container gets the pill treatment.
+       currentColor on the background keeps the pill tinted per team for free. */
+    .session-model-pill {
+      padding: 1px 6px;
+      border-radius: 999px;
+      line-height: 1.5;
+      max-width: 44%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      background: color-mix(in srgb, currentColor 12%, transparent);
+      border: 1px solid color-mix(in srgb, currentColor 24%, transparent);
+      opacity: 0.85;
+    }
+    .session-preview { font-size: 12px; color: var(--text-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; opacity: 0.5; }
+    /* [17/10/2026] Riga 2 della card: a sinistra lo stato (WORKING,
+       WAITING, REPLY READY) o l'inizio dell'ultimo messaggio coi puntini, a
+       destra la pastiglia del modello. Riga 1 resta al solo nome. */
+    .session-sub {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 3px;
+      min-width: 0;
+    }
+    .session-sub .session-status-label { margin-top: 0; flex-shrink: 0; }
+    .session-sub .session-preview { flex: 1; min-width: 0; margin-top: 0; }
+    .session-sub .session-model-pill { margin-left: auto; }
+
+    /* Session awaiting input (unread response) â€” bright highlight */
+    .session-item.awaiting {
+      background: linear-gradient(90deg, rgba(var(--accent-bright-rgb), 0.09) 0%, transparent 100%);
+      border-left-color: var(--accent-bright);
+    }
+    .session-item.awaiting .session-title {
+      color: var(--accent-bright);
+      font-weight: 700;
+    }
+    .session-item.awaiting::after {
+      content: '';
+      position: absolute;
+      right: 46px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--accent-bright);
+      box-shadow: 0 0 8px rgba(var(--accent-bright-rgb), 0.5);
+    }
+    /* Per-agent ready dot (Fix G): the awaiting dot uses the agent color instead
+       of the generic purple accent (per-agent rules: superCssAggiunti). */
+    .session-item.special.awaiting::after {
+      background: var(--agent-special);
+      box-shadow: 0 0 8px rgba(var(--agent-special-rgb), 0.5);
+    }
+
+    /* Fix 3 (2026-07-21): a fleet card's color derives from its agentType and must
+       PERSIST through every state. The generic `.awaiting` rules above repaint the
+       left border + title with the purple accent — so a done agent went purple
+       like a stock session. Re-assert each fleet agent's own color (border-left +
+       title) when awaiting.
+       Placed AFTER `.awaiting` so it wins on equal specificity. */
+    .session-item.special.awaiting     { border-left-color: var(--agent-special); }
+
+    .session-item.special.awaiting     .session-title { color: var(--agent-special); }
+
+    /* Session in-progress (Claude actively responding) â€” border pulse.
+       Fix F: the pulse color is driven by --pulse-rgb (default cyan) so the
+       keyframes are no longer hard-cyan for every agent. Per-agent overrides
+       below repoint --pulse-rgb to the agent color; the custom property is
+       resolved per-element inside the keyframes, so each agent pulses in its
+       own color. */
+    .session-item.in-progress {
+      --pulse-rgb: var(--cyan-rgb);
+      border-left-color: rgb(var(--pulse-rgb));
+    }
+    .session-item.in-progress .session-title {
+      color: rgb(var(--pulse-rgb));
+    }
+    /* Per-agent in-progress pulse color (Fix F) */
+    .session-item.special.in-progress    { --pulse-rgb: var(--agent-special-rgb); }
+
+    /* B1 (2026-08-11): plain-language state chip in the card header so the LIST
+       reads at a glance — "sta lavorando" (busy) vs "risposta pronta" (done).
+       Text-only micro-label; it complements the existing pulse/ready-dot, adds
+       no new server state. */
+    /* Punti 1+2: the status label now sits UNDER the name (in the preview's slot),
+       not inline in the header — so it reads as the card's primary at-a-glance state. */
+    .session-status-label {
+      display: inline-block;
+      margin-top: 3px;
+      padding: 1px 6px;
+      border-radius: 8px;
+      font-size: 10px;
+      font-weight: 700;
+      line-height: 1.4;
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+    /* Empty spacer for idle/never-opened cards — keeps row height uniform. */
+    .session-preview-empty { opacity: 0; }
+    /* "risposta pronta" — solid ready color, mirrors the awaiting dot. */
+    .session-status-label.is-awaiting {
+      color: var(--bg, #0a0a0a);
+      background: var(--accent-bright);
+    }
+    /* "sta lavorando" — pulsing cyan outline, echoes the in-progress border. */
+    .session-status-label.is-busy {
+      color: rgb(var(--cyan-rgb));
+      background: rgba(var(--cyan-rgb), 0.12);
+      border: 1px solid rgba(var(--cyan-rgb), 0.7);
+      box-shadow: 0 0 8px rgba(var(--cyan-rgb), 0.35);
+    }
+    /* [17/10/2026] Sessione che ASPETTA lavori in sottofondo (modello fermo):
+       «waiting» nello stesso blu pulsante di «working». Nessun tasto
+       sulla card: si ferma col tasto rosso della chat. */
+    .session-status-label.is-waiting {
+      color: rgb(var(--cyan-rgb));
+      background: rgba(var(--cyan-rgb), 0.12);
+      border: 1px solid rgba(var(--cyan-rgb), 0.7);
+      box-shadow: 0 0 8px rgba(var(--cyan-rgb), 0.35);
+    }
+    /* [29/10/2026] Aiutanti fermati e nessuno più vivo: «1 stopped», fermo e
+       sobrio (non pulsa: non c'è niente in corso). */
+    .session-status-label.is-stopped {
+      color: var(--text-dim);
+      border: 1px solid var(--text-dim);
+    }
+
+    /* Per-agent "risposta pronta" chip color, matching the ready-dot overrides. */
+    .session-item.special.awaiting     .session-status-label.is-awaiting { background: var(--agent-special); }
+
+    .session-item.special {
+      background: rgba(var(--agent-special-rgb), 0.10);
+      /* Card round 1 (2026-08-16): the lone 3px left stripe didn't register —
+         symmetric 4px gold stripes on BOTH sides, equal and more present. */
+      border-left: 4px solid var(--agent-special);
+      border-right: 4px solid var(--agent-special);
+      box-shadow: inset 0 0 0 1px rgba(var(--agent-special-rgb), 0.30);
+    }
+    .session-item.special .session-title { color: #fde68a; font-weight: 700; }
+    /* [12/11/2026 ] Ogni super agente scelto (plugin «Super agents»)
+       vestito come la scheda speciale nel SUO colore (--sc-rgb, messo sulla scheda da
+       superVeste in sessions.js): sfondo, due strisce, nome, modello, icona.
+       the owner: «I chose green… so many more things should be green and they are not».
+       Mentre lavora resta la regola comune (blu pulsante, #session-list .is-live). */
+    #session-list .session-item.super-card {
+      background: rgba(var(--sc-rgb), 0.10);
+      border-left: 4px solid rgb(var(--sc-rgb));
+      border-right: 4px solid rgb(var(--sc-rgb));
+      box-shadow: inset 0 0 0 1px rgba(var(--sc-rgb), 0.30);
+      --bleed-rgb: var(--sc-rgb);
+    }
+    #session-list .session-item.super-card:not(.is-live) .session-title { color: rgb(var(--sc-rgb)); font-weight: 700; }
+    #session-list .session-item.super-card .session-time,
+    #session-list .session-item.super-card .session-team-icon { color: rgb(var(--sc-rgb)); opacity: 1; }
+    .session-item.special .session-time { color: var(--agent-special); opacity: 0.85; }
+    /* Item 5 (2026-07-21): the relative-time text ("1 minute ago", "right now")
+       takes each fleet agent's own color, not the default dim purple. */
+
+    /* Item 6 (2026-07-21): the character glyph on a live fleet card is COLORED with the agent's own
+       color instead of the monochrome dim default. Full opacity so the hue reads. */
+    .session-item.special     .session-team-icon { color: var(--agent-special); opacity: 1; }
+
+    /* Special-card empty-state placeholder — click to start its agent.
+       Round 3 (2026-08-16): EMPTY cards are LIGHT GREY, no agent color — the
+       color arrives only when the special session is actually live. */
+    .special-placeholder {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      width: 100%;
+      padding: 12px 14px;
+      margin-bottom: 6px;
+      border-radius: 12px;
+      cursor: pointer;
+      background: rgba(148, 163, 184, 0.05);
+      border: 1px dashed rgba(148, 163, 184, 0.35);
+      color: rgba(148, 163, 184, 0.75);
+      text-align: left;
+      transition: background 0.15s, border-color 0.15s, transform 0.15s;
+      font-family: inherit;
+    }
+    .special-placeholder:hover {
+      background: rgba(148, 163, 184, 0.10);
+      border-color: rgba(148, 163, 184, 0.55);
+    }
+    .special-placeholder:active { transform: scale(0.98); }
+    .special-placeholder-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: rgba(148, 163, 184, 0.75);
+      flex-shrink: 0;
+      opacity: 0.9;
+    }
+    .special-placeholder-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+    .special-placeholder .dp-title { font-size: 14px; font-weight: 700; color: rgba(148, 163, 184, 0.75); }
+    .special-placeholder .dp-sub { font-size: 11px; color: rgba(148, 163, 184, 0.6); opacity: 0.8; }
+
+    /* --- Fleet section: the special agents, one colored card each --- */
+    .session-group.fleet-group { margin-bottom: 16px; }
+    .session-group.fleet-group .session-group-label { opacity: 0.9; }
+    .agent-placeholder {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      width: 100%;
+      padding: 12px 14px;
+      margin-bottom: 6px;
+      border-radius: 12px;
+      border: 1px dashed rgba(148, 163, 184, 0.35);
+      background: rgba(148, 163, 184, 0.05);
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s, transform 0.05s;
+      text-align: left;
+    }
+    .agent-placeholder:active { transform: scale(0.98); }
+    .agent-placeholder-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      opacity: 0.9;
+    }
+    .agent-placeholder-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+    .agent-placeholder .ap-title { font-size: 14px; font-weight: 700; }
+    .agent-placeholder .ap-sub { font-size: 11px; }
+    /* Round 3 (2026-08-16): EMPTY agent cards are all the same LIGHT GREY —
+       per-agent color tints removed from
+       placeholders; the agent's color arrives only on the LIVE session card. */
+    .agent-placeholder .agent-placeholder-icon,
+    .agent-placeholder .ap-title { color: rgba(148, 163, 184, 0.75); }
+    /* 12/10: una trasparenza sola (prima colore 0.6 × opacità 0.6 = 1,9:1). */
+    .agent-placeholder .ap-sub { color: rgba(148, 163, 184, 0.75); }
+    .agent-placeholder:hover { background: rgba(148, 163, 184, 0.10); border-color: rgba(148, 163, 184, 0.55); }
+
+    /* [17/10/2026] VIVA = lavora o aspetta (classe is-live, sessions.js). the owner:
+       «WORKING o WAITING col nome e l'etichetta nello stesso blu pulsante, per
+       tutte (anche i super agenti); cliccata resta blu e
+       pulsa: il nome non diventa bianco, la card non diventa viola; finita
+       torna al suo colore». #session-list porta la priorità sopra le regole di
+       squadra, di gruppo e di selezione: un blocco solo, nessun !important. */
+    #session-list .session-item.is-live {
+      --pulse-rgb: var(--cyan-rgb);
+      --bleed-rgb: var(--cyan-rgb);
+      border-left-color: rgb(var(--pulse-rgb));
+    }
+    #session-list .session-item.is-live:not(.active) {
+      box-shadow: inset 0 0 0 1px rgba(var(--cyan-rgb), 0.25);
+    }
+    #session-list .session-item.special.is-live {
+      background: rgba(var(--cyan-rgb), 0.10);
+      border-right-color: rgb(var(--cyan-rgb));
+    }
+    #session-list .session-item.is-live .session-title {
+      color: rgb(var(--cyan-rgb));
+      text-shadow: 0 0 10px rgba(var(--cyan-rgb), 0.45);
+    }
+    #session-list .session-item.is-live .session-time,
+    #session-list .session-item.is-live .session-team-icon { color: rgb(var(--cyan-rgb)); }
+
+    /* JOB 2 (2026-07-22): the special card's glyph looked smaller / off-center vs
+       the others. Cause: a LIVE Fleet card drew its glyph through
+       .session-team-icon @ 12px, while the placeholder cards inherited the
+       button's default font-size — so the four Fleet slots never matched, and
+       the sun (thin rays around a small disc) read smallest of all. Normalize
+       EVERY Fleet-slot glyph — live card OR placeholder — to one explicit box,
+       and force the SVG to fill+center it. Now the sun matches its siblings
+       exactly in size AND centering, in every live/placeholder combination.
+       BEFORE: live .session-team-icon = font-size:12px (svg 1em, not centered);
+               placeholders = 1em of UA button default. AFTER: all = 16px box,
+               svg 16x16 block, centered via inline-flex align/justify. */
+    .fleet-group .session-team-icon,
+    .special-placeholder-icon,
+    .agent-placeholder-icon {
+      font-size: 16px;
+      width: 16px;
+      height: 16px;
+      line-height: 1;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .fleet-group .session-team-icon svg,
+    .special-placeholder-icon svg,
+    .agent-placeholder-icon svg {
+      width: 16px;
+      height: 16px;
+      display: block;
+    }
+    /* R4 punto 2 (2026-08-16): on the ACTIVE Super-Agent card the glyph scales
+       up to own the wider full-bleed gutter. Card round 2 (same day): 26px was
+       too big and sat too far right — 20px, pulled 3px left so it centers
+       optically in the gutter. */
+    .fleet-group .session-item.active .session-team-icon {
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
+      margin-left: -3px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .fleet-group .session-item.active .session-team-icon svg {
+      width: 20px;
+      height: 20px;
+    }
+
+    /* --- Inline compose box (click-to-compose) --- */
+    .agent-compose {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin: -2px 0 8px;
+      padding: 10px;
+      border-radius: 12px;
+      border: 1px solid rgba(148, 163, 184, 0.35);
+      background: rgba(148, 163, 184, 0.06);
+    }
+    .agent-compose-input {
+      width: 100%;
+      box-sizing: border-box;
+      resize: vertical;
+      min-height: 54px;
+      padding: 8px 10px;
+      border-radius: 8px;
+      border: 1px solid rgba(148, 163, 184, 0.35);
+      background: rgba(15, 23, 42, 0.35);
+      color: var(--text, #e2e8f0);
+      font: inherit;
+      font-size: 13px;
+      line-height: 1.4;
+      outline: none;
+    }
+    .agent-compose-input:focus { border-color: rgba(148, 163, 184, 0.7); }
+    .agent-compose-send {
+      align-self: flex-end;
+      padding: 6px 16px;
+      border-radius: 8px;
+      border: none;
+      background: rgba(148, 163, 184, 0.2);
+      color: var(--text, #e2e8f0);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .agent-compose-send:hover { background: rgba(148, 163, 184, 0.35); }
+
+    /* SELETTORE MODELLO ALLO SPAWN (2026-08-16, round #6) — the action row of
+       the compose box: model picker on the LEFT, Send on the right. Without a
+       picker (non Super-Agent) Send stays exactly where it was: right-aligned. */
+    .agent-compose-actions {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+    .agent-compose-actions .agent-compose-send { align-self: auto; }
+    .agent-compose-model { position: relative; margin-right: auto; }
+    .agent-compose-model-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 10px;
+      border-radius: 8px;
+      border: 1px solid rgba(148, 163, 184, 0.35);
+      background: rgba(15, 23, 42, 0.35);
+      color: var(--text, #e2e8f0);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .agent-compose-model-btn:hover { border-color: rgba(148, 163, 184, 0.7); }
+    .agent-compose-model-btn .acm-caret { font-size: 10px; opacity: 0.6; }
+    .agent-compose-model-menu {
+      position: absolute;
+      bottom: calc(100% + 6px);
+      left: 0;
+      min-width: 130px;
+      z-index: 40;
+      padding: 4px;
+      border-radius: 10px;
+      border: 1px solid rgba(148, 163, 184, 0.35);
+      background: #0f172a;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+    }
+    .agent-compose-model-menu .acm-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 7px 10px;
+      border-radius: 7px;
+      font-size: 13px;
+      color: var(--text, #e2e8f0);
+      cursor: pointer;
+    }
+    .agent-compose-model-menu .acm-row:hover { background: rgba(148, 163, 184, 0.18); }
+    .agent-compose-model-menu .acm-check { opacity: 0.8; font-size: 12px; }
+
+    /* NEW SESSION COMPOSE (2026-08-19) — the very same compose box as a
+       Super-Agent card's, but anchored ABOVE its button: it is inserted as the
+       first child of #sidebar-footer, so it stacks on top of the New Session /
+       trash row and pushes the scrollable session list, instead of hanging off
+       the bottom of the screen. The model menu inside keeps the SHARED upward
+       anchor (.agent-compose-model-menu above, bottom: 100%) — only its stacking
+       is raised so it paints over the session list it now overlaps. */
+    .agent-compose--above { margin: 0 0 10px; }
+    .agent-compose--above .agent-compose-model-menu { z-index: 860; }
+    /* The New Session panel is the SAME component as a Super-Agent card's; it
+       was only missing its accent, so it fell through to the bare grey default
+       and read as a different widget. Like every other panel it wears its own
+       launcher's colour — here #sidebar-footer .new-session-btn's accent-bright,
+       the same gradient/border family. Nothing bespoke: same rules, same shape,
+       different variable. */
+    .agent-compose.agent-overseer { background: rgba(var(--accent-bright-rgb), 0.10); border-color: rgba(var(--accent-bright-rgb), 0.45); }
+    .agent-compose.agent-overseer .agent-compose-send { background: rgba(var(--accent-bright-rgb), 0.25); color: var(--accent-bright); }
+    .agent-compose.agent-overseer .agent-compose-send:hover { background: rgba(var(--accent-bright-rgb), 0.4); }
+    /* Per-agent Send accents */
+
+    /* JOB 3(b) (2026-07-22): tint the whole optional-first-message BOX with the
+       member's own color (generated by superCssAggiunti, sessions.js) so the
+       compose box reads as that Super-Agent's. */
+
+    /* --- JOB 3: Fleet agent card titles in UPPERCASE (display only) --- */
+    /* Scoped to the Fleet group only — it contains exclusively agent cards
+       (special card + super agents, placeholder or live). Normal project/other
+       sessions live in the Waiting/Working groups and stay unaffected. This is
+       display-only (text-transform); the stored session title is NOT mutated. */
+    .fleet-group .ap-title,
+    .fleet-group .dp-title,
+    .fleet-group .session-item .session-title {
+      text-transform: uppercase;
+    }
+
+    /* --- Group visual hierarchy: Special > Waiting > Working --- */
+    /* (the active session always stays prominent — :not(.active) scopes below) */
+
+    /* WAITING — needs my response → PURPLE GLOW (same family as the active
+       session, but kept as an inset, rounded card so the full-bleed active
+       one still clearly stands apart). */
+    .session-group[data-group="waiting"] .session-item:not(.active) {
+      background: linear-gradient(90deg, rgba(var(--accent-bright-rgb), 0.20) 0%, rgba(var(--accent-bright-rgb), 0.05) 100%);
+      border-color: rgba(var(--accent-bright-rgb), 0.30);
+      border-left-color: var(--accent-bright);
+      box-shadow: inset 0 0 0 1px rgba(var(--accent-bright-rgb), 0.25), 0 0 10px rgba(var(--accent-bright-rgb), 0.10);
+    }
+    .session-group[data-group="waiting"] .session-item:not(.active):hover {
+      background: linear-gradient(90deg, rgba(var(--accent-bright-rgb), 0.28) 0%, rgba(var(--accent-bright-rgb), 0.08) 100%);
+      border-color: rgba(var(--accent-bright-rgb), 0.45);
+    }
+    .session-group[data-group="waiting"] .session-item:not(.active) .session-title {
+      color: #ffffff;
+      font-weight: 700;
+    }
+    .session-group[data-group="waiting"] .session-item:not(.active) .session-preview { opacity: 0.7; }
+    .session-group[data-group="waiting"] .session-item:not(.active) .session-time { color: var(--accent-bright); opacity: 0.85; }
+    .session-group[data-group="waiting"] .session-group-label { opacity: 0.95; }
+
+    /* WORKING — no action needed → RECEDE: muted, dimmer, no shadow */
+    .session-group[data-group="working"] .session-item:not(.active) {
+      opacity: 0.5;
+      background: rgba(255, 255, 255, 0.012);
+      border-color: rgba(255, 255, 255, 0.04);
+      box-shadow: none;
+    }
+    .session-group[data-group="working"] .session-item:not(.active):hover {
+      opacity: 0.85;
+      background: rgba(255, 255, 255, 0.04);
+    }
+    .session-group[data-group="working"] .session-item:not(.active) .session-title {
+      color: var(--text-dim);
+      font-weight: 600;
+    }
+    /* 12/10: 0.45 = 2,4:1, illeggibile; le carte sotto restano smorzate. */
+    .session-group[data-group="working"] .session-group-label { opacity: 0.8; }
+
+    /* View toggle + grid view removed 2026-04-14 â€” list view is the only mode. */
+    /* Card round 2 (2026-08-16): generic card glyph (chat bubble & team icons)
+       12px â†’ 16px explicit box, centered â€” matches the Fleet-slot 16px norm. */
+    .session-team-icon {
+      display: inline-flex;
+      font-size: 16px;
+      width: 16px;
+      height: 16px;
+      line-height: 1;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      opacity: 0.7;
+    }
+    .session-team-icon svg { width: 16px; height: 16px; display: block; }
+    .session-dot { display: none; }
+
+    /* Session card wrapper */
+    .session-item-wrap {
+      position: relative;
+      border-radius: 12px;
+      margin-bottom: 4px;
+    }
+
+    .session-delete {
+      background: none;
+      border: none;
+      color: var(--text-dim);
+      font-size: 14px;
+      cursor: pointer;
+      padding: 8px 10px;
+      min-width: 36px;
+      min-height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: all 0.15s;
+      border-radius: 8px;
+      -webkit-tap-highlight-color: transparent;
+      flex-shrink: 0;
+    }
+
+    /* R4 punto 3 (2026-08-16): the trash is ALWAYS visible on every session
+       card (before: opacity 0, revealed only on :hover — invisible on touch).
+       Discreet grey that doesn't catch the eye; NO red anywhere, hover/press
+       just brighten the same neutral grey. */
+    .session-delete { opacity: 0.25; color: rgba(148, 163, 184, 0.9); }
+    /* Card round 2 (2026-08-16): on the ACTIVE card the widened side padding
+       pushed the trash inward — nudge it back toward the right stripe. */
+    .session-item.active .session-delete { margin-right: -10px; }
+    .session-item:hover .session-delete { opacity: 0.5; }
+    .session-delete:hover { opacity: 0.8 !important; color: rgba(203, 213, 225, 0.9); }
+    .session-delete:active { opacity: 1 !important; color: rgba(203, 213, 225, 1); background: rgba(148, 163, 184, 0.12); }
+
+    /* --- Main Chat Area --- */
+    #main {
+      flex: 1;
+      min-width: 0; /* prevent flex child from overflowing */
+      min-height: 0; /* allow shrinking within #app */
+      height: 100%; /* explicit height constraint â€” required for WebView input visibility */
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      position: relative; /* Positioning context for absolute children
+        so their top/left resolve against #main, not #app. */
+    }
+
+    /* #lab-panel rules removed 2026-08-16 — Lab view retired from index.html. */
+
+    #header {
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 14px;
+      padding-top: calc(10px + var(--top-inset));
+      /* "La fascia non copre bene" (2026-08-20 round 3, punto 6). At 0.85 the
+         band composited to rgb(13,9,31) over a body of rgb(8,6,26): a barely
+         lighter smear that read as not covering. 0.96 keeps the blur but lets
+         the band actually be a band.
+         [10/11/2026 BATTERIA] Senza sfocatura: dietro la fascia c'è solo
+         lo sfondo fermo, e a 0.96 la sfocatura non si vedeva; costava una
+         passata di GPU a ogni fotogramma. */
+      background: rgba(14, 10, 32, 0.96);
+      min-height: 50px;
+      max-width: 100%;
+      overflow: hidden;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      /* NO border-bottom here on purpose. That 1px rgba(var(--border-rgb),0.1)
+         was the "bordino nero": an absolutely-positioned ::after resolves
+         bottom:0 against the PADDING box, so the glow bar sat ON TOP of the
+         border and left the near-black border showing as a separate hairline
+         underneath it — two lines where the design has one. The single line is
+         now drawn by ::after below. */
+    }
+
+    /* The one line that closes the header — doubles as the context health glow.
+       Default is --divider, the SAME token as the pills-zone line (punto 5), so
+       the two dividers in the top strip are identical (punto 6: "una riga
+       divisoria pulita come al punto 5"). --context-glow-color lo scriveva
+       plugins/context-manager, tolto il 2026-09-10: oggi nessuno lo imposta,
+       quindi vale SEMPRE il ripiego --divider. La var() resta perché il ripiego
+       è già la strada giusta, non perché aspetti qualcuno.
+       Round 4 punto 1: thickness comes from --divider-w, so this line and the
+       pills-zone border-bottom are the same weight by construction. */
+    #header::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: var(--divider-w);
+      background: var(--context-glow-color, var(--divider));
+      transition: background 1s ease;
+    }
+
+    #menu-btn {
+      background: none;
+      border: none;
+      color: var(--text-dim);
+      font-size: 18px;
+      cursor: pointer;
+      padding: 10px;
+      min-width: 44px;
+      min-height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
+      transition: background 0.15s;
+      flex-shrink: 0;
+    }
+
+    #menu-btn:active { background: var(--surface2); }
+
+    #header-title {
+      flex: 1;
+      font-size: 15px;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      /* 2026-08-16: left-aligned in the slot freed by the retired Lab button —
+         the owner never liked the session name centered. The empty-view "151"
+         emblem stays centered via the #app.view-empty override below. */
+      text-align: left;
+      padding-left: 2px;
+      cursor: pointer;
+      letter-spacing: -0.2px;
+    }
+
+    /* Model chip on the SESSION NAME ROW (2026-08-20). Built by topbar.js
+       (ensureModelChip) and inserted right after #header-title. It carries the
+       .tb-chip/.tb-pill classes from the days of the status bar (gone since
+       2026-10-16); it is styled here, and only here. */
+    #header-model-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      flex-shrink: 0;
+      max-width: 40%;
+      margin-left: 8px;
+      padding: 3px 9px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.1px;
+      white-space: nowrap;
+      overflow: hidden;
+      color: var(--accent-bright, var(--accent));
+      background: rgba(var(--accent-rgb), 0.10);
+      border: 1px solid rgba(var(--accent-rgb), 0.22);
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      transition: background 0.15s ease, border-color 0.15s ease;
+    }
+    #header-model-chip:hover {
+      background: rgba(var(--accent-rgb), 0.16);
+      border-color: rgba(var(--accent-rgb), 0.34);
+    }
+    #header-model-chip:active { background: rgba(var(--accent-rgb), 0.22); }
+    /* .tb-ico rules deleted 2026-08-20 round 2, punto 1 — the chip renders the
+       model NAME only, so there is no icon element left to style. */
+    #header-model-chip .tb-val {
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    /* No open session ⇒ no model to show. */
+    #app.view-empty #header-model-chip { display: none; }
+
+    /* New-session screen: pin the "151" emblem to the true centre of the
+       header (the buttons on each side are unequal widths, so the normal
+       flex:1 centring lands it off-centre). Scoped to the empty view only —
+       session-view titles keep their flex behaviour. */
+    #app.view-empty #header-title {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      flex: 0 0 auto;
+      width: auto;
+      max-width: 60%;
+      pointer-events: none;
+    }
+    #app.view-empty .header-emblem {
+      font-size: 13px;
+      padding: 4px 13px;
+      letter-spacing: 2px;
+      box-shadow: 0 2px 12px rgba(var(--accent-rgb), 0.35);
+    }
+
+    .header-emblem {
+      font-family: 'Cascadia Code', 'Fira Code', monospace;
+      font-size: 11px;
+      font-weight: 700;
+      color: #fff;
+      background: linear-gradient(135deg, var(--accent), var(--cyan));
+      padding: 3px 9px;
+      border-radius: 6px;
+      letter-spacing: 1.5px;
+    }
+
+    #header-status-wrap {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+
+    #header-status {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      transition: all 0.3s ease;
+    }
+    /* Disambiguate from the topbar server dot (which is green when ok).
+       Force the session status indicator into the accent (purple) family
+       for idle/online states so two green dots never coexist. Error/wrap
+       states keep their semantic colors. */
+    #header-status.session-dot.idle,
+    #header-status.session-dot.team-spotify {
+      background: var(--accent);
+      box-shadow: 0 0 6px rgba(var(--accent-bright-rgb), 0.4);
+    }
+
+    /* --- Messages --- */
+    /* View state: empty (launcher) vs session (chat) â€” controlled by class on #app */
+    #messages, #input-area { display: none; }
+    #app.view-session #messages, #app.view-session #input-area { display: block; }
+    #app.view-session #empty-state { display: none !important; }
+    #app.restart-hidden { display: none !important; }
+
+    #messages {
+      flex: 1 1 0;
+      min-height: 0;
+      overflow-y: auto;
+      overflow-x: hidden;
+      padding: 12px;
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior-y: contain; /* prevent scroll chaining to body */
+      touch-action: pan-y; /* explicitly allow vertical touch scroll */
+      /* NO scroll-behavior:smooth â€” causes jank during streaming */
+      /* NO display:flex â€” block layout is more reliable for scroll on mobile */
+    }
+
+    /* Constrain messages to a readable column on wide screens */
+    @media (min-width: 900px) {
+      #messages {
+        padding-left: calc((100% - 800px) / 2);
+        padding-right: calc((100% - 800px) / 2);
+      }
+    }
+
+    /* Spacing between messages (replaces flex gap) — slightly more air for readability */
+    #messages > * + * {
+      margin-top: var(--space-3);
+    }
+
+    .message {
+      max-width: 90%;
+      padding: var(--space-3) var(--space-4);
+      border-radius: var(--r-xl);
+      position: relative;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+      overflow: hidden;
+      min-width: 0;
+      line-height: 1.55;
+      font-size: var(--fs-base);
+      transition: box-shadow var(--motion-base) var(--ease-out);
+    }
+
+    /* Only animate NEW messages, not history re-renders */
+    .message.new-msg {
+      animation: messageIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @keyframes messageIn {
+      from { opacity: 0; transform: translateY(10px) scale(0.98); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .message.user {
+      background: linear-gradient(135deg, rgba(120, 70, 230, 0.26), rgba(100, 50, 200, 0.16));
+      border: 1px solid rgba(var(--accent-bright-rgb), 0.22);
+      color: #fff;
+      margin-left: auto;
+      border-bottom-right-radius: var(--r-sm);
+      /* [10/11/2026 BATTERIA ] Semitrasparente come prima, senza
+         sfocatura dietro: dietro c'è solo lo sfondo fermo (sfumature morbide),
+         e ogni bolla sfocata costava una passata di GPU a ogni scorrimento. */
+      box-shadow: var(--shadow-sm);
+    }
+
+    /* [2026-10-01] Bolla del proprietario: markdown come le risposte; ripiego testo con a-capo veri. */
+    .message.user .user-plain { white-space: pre-wrap; }
+    .message.user .user-md > :first-child { margin-top: 0; }
+    .message.user .user-md > :last-child { margin-bottom: 0; }
+    .message.user .user-md p { margin: 0 0 0.5em; }
+    .message.user .user-md ul, .message.user .user-md ol { margin: 0.2em 0 0.5em; padding-left: 1.3em; }
+
+    .message.assistant {
+      background: rgba(14, 10, 32, 0.55);
+      border: 1px solid rgba(var(--border-rgb), 0.16);
+      margin-right: auto;
+      border-bottom-left-radius: var(--r-sm);
+      max-width: 100%;
+      /* [10/11/2026 BATTERIA ] Senza sfocatura: vedi .message.user. */
+      box-shadow: var(--shadow-md);
+    }
+
+    .message.system {
+      background: rgba(20, 15, 40, 0.6);
+      border: 1px dashed rgba(var(--border-rgb), 0.2);
+      margin-right: auto;
+      max-width: 100%;
+      font-size: 13px;
+      color: var(--text-dim);
+    }
+
+    .msg-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 11px;
+      margin-bottom: 6px;
+      font-weight: 500;
+      color: var(--text-dim);
+    }
+
+    .msg-role {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-weight: 500;
+      font-size: 11px;
+    }
+
+    .msg-role::before {
+      display: none;
+    }
+
+    /* Attachment indicator (📎 name) shown on messages that carried files */
+    .msg-attachments {
+      font-size: 11px;
+      color: var(--text-dim);
+      margin-bottom: 6px;
+      opacity: 0.85;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 100%;
+    }
+
+    /* V2 Glass â€” styled code and bold in assistant messages */
+    .message.assistant code {
+      background: rgba(var(--teal-rgb),0.1);
+      padding: 1px 6px;
+      border-radius: 4px;
+      font-family: 'Cascadia Code', 'Fira Code', monospace;
+      color: #2dd4bf;
+    }
+    .message.assistant strong { color: var(--accent2); }
+
+    /* Message status indicator (below user messages) */
+    .msg-status {
+      font-size: 10px;
+      text-align: right;
+      color: rgba(255,255,255,0.4);
+      margin-top: 4px;
+      letter-spacing: 0.3px;
+      transition: opacity 0.2s;
+    }
+    .msg-status.sent { color: rgba(var(--accent-bright-rgb), 0.5); }
+    .msg-status.received { color: rgba(var(--accent-rgb), 0.7); }
+    .msg-status.delivered { color: rgba(52, 211, 153, 0.5); }
+    .msg-status.queued { color: rgba(251, 191, 36, 0.7); }
+
+    .message .copy-btn {
+      position: absolute;
+      bottom: 6px;
+      right: 8px;
+      background: rgba(14, 8, 32, 0.8);
+      border: 1px solid rgba(var(--accent-rgb), 0.15);
+      color: var(--text-dim);
+      font-size: 11px;
+      padding: 3px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      opacity: 0;
+      transition: all 0.2s ease;
+      z-index: 2;
+    }
+
+    .message .copy-btn:active {
+      opacity: 1;
+      background: rgba(var(--accent-bright-rgb), 0.2);
+      border-color: var(--accent);
+    }
+
+    .message .copy-btn.copied {
+      background: rgba(52, 211, 153, 0.15);
+      border-color: var(--green);
+      color: var(--green);
+    }
+
+    /* ONE copy button for BOTH roles (2026-08-20 round 2, punto 5).
+       These rules used to be scoped to `.message.assistant`, so the owner's own
+       bubbles fell through to the base `.copy-btn` above: opacity 0 (invisible
+       until hover/tap — impossible to discover on a phone, which has no hover)
+       and font-size 11px / padding 3px 10px, which rendered the icon as a wide
+       text pill instead of a square glyph button. The button is identical on
+       both sides, so its styling belongs on `.message`, not on one role. */
+    /* Room for the always-visible button, on both bubble kinds. Scoped to the
+       two roles that actually carry one — .message.system has no copy button
+       and must keep its tighter box. */
+    .message.user, .message.assistant { padding-bottom: 20px; }
+    .message .copy-btn {
+      opacity: 0.55;
+      font-size: 13px;
+      padding: 2px 6px;
+      line-height: 1;
+    }
+    .message:hover .copy-btn,
+    .message.tapped .copy-btn { opacity: 0.9; }
+    .message .copy-btn.copied { opacity: 1; }
+
+    .message h1 { margin: 12px 0 4px; font-size: 20px; font-weight: 700; }
+    .message h2 { margin: 10px 0 3px; font-size: 17px; font-weight: 600; }
+    .message h3 { margin: 8px 0 2px; font-size: 15px; font-weight: 600; }
+    .message p { margin: 3px 0; }
+    .message p:first-child { margin-top: 0; }
+    .message p:last-child { margin-bottom: 0; }
+    .message ul, .message ol { margin: 3px 0; padding-left: 18px; }
+    .message li { margin: 1px 0; }
+    .message li p { margin: 1px 0; } /* marked wraps li content in <p> */
+
+    /* Tables inside messages â€” horizontal scroll */
+    .message table {
+      display: block;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      max-width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      margin: 4px 0;
+    }
+    .message th, .message td {
+      padding: 4px 8px;
+      border: 1px solid var(--border);
+      white-space: nowrap;
+    }
+    .message th {
+      background: var(--surface2);
+      font-weight: 600;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+
+    /* Images inside messages */
+    .message img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 8px;
+    }
+
+    /* Links â€” break long URLs */
+    .message a {
+      color: var(--accent);
+      word-break: break-all;
+    }
+
+    .message pre {
+      background: var(--surface-code);
+      border: 1px solid rgba(var(--border-rgb), 0.12);
+      border-radius: var(--r-lg);
+      padding: var(--space-3);
+      padding-top: var(--space-2);
+      min-height: 36px;
+      /* il proprietario hates horizontal scroll in copyable blocks — long lines WRAP instead.
+         pre-wrap keeps the code's own newlines/indent; overflow-wrap + break-word
+         break over-long tokens (URLs, commands) so nothing scrolls sideways. */
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+      overflow-x: hidden;
+      margin: var(--space-2) 0;
+      position: relative;
+      font-size: var(--fs-sm);
+      line-height: 1.5;
+      max-width: 100%;
+      font-family: 'Cascadia Code', 'Fira Code', 'JetBrains Mono', monospace;
+      box-shadow: var(--shadow-sm);
+    }
+    /* Ensure the inner <code> (incl. hljs-highlighted) wraps with the <pre> */
+    .message pre code,
+    .message pre code.hljs {
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+    }
+
+    /* Language badge on code blocks — pill in top-left */
+    .code-lang-badge {
+      position: absolute;
+      top: 0;
+      left: var(--space-3);
+      background: rgba(var(--accent-bright-rgb), 0.14);
+      color: var(--accent);
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.9px;
+      padding: 2px var(--space-2);
+      border-radius: 0 0 var(--r-sm) var(--r-sm);
+      font-family: var(--font);
+    }
+
+    .message pre:has(.code-lang-badge) {
+      padding-top: var(--space-5);
+    }
+
+    /* Override highlight.js background to match theme */
+    .message pre code.hljs {
+      background: transparent;
+      padding: 0;
+    }
+
+    /* Collapsible code blocks */
+    .message pre.collapsed {
+      max-height: 160px;
+      overflow: hidden;
+    }
+    .message pre.collapsed::after {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 40px;
+      background: linear-gradient(transparent, rgba(6, 4, 16, 0.9));
+      pointer-events: none;
+    }
+    .code-expand-btn {
+      display: block;
+      width: 100%;
+      background: rgba(6, 4, 16, 0.75);
+      border: 1px solid rgba(var(--border-rgb), 0.06);
+      border-top: none;
+      border-radius: 0 0 12px 12px;
+      color: var(--accent);
+      font-size: 11px;
+      font-weight: 500;
+      padding: 5px;
+      cursor: pointer;
+      margin-top: -8px;
+      margin-bottom: 8px;
+      transition: background 0.15s;
+    }
+
+    .code-expand-btn:active { background: rgba(var(--accent-rgb), 0.08); }
+
+    .mockup-frame {
+      width: 100%;
+      max-width: 100%;
+      height: 70vh;
+      border: 1px solid var(--accent);
+      border-radius: var(--radius);
+      margin: 8px 0;
+      box-shadow: 0 0 20px var(--accent-glow);
+      background: var(--bg);
+    }
+
+    .mockup-label {
+      font-size: 11px;
+      color: var(--text-dim);
+      text-align: center;
+      padding: 4px 0;
+      font-style: italic;
+    }
+
+    .message code {
+      font-family: 'Cascadia Code', 'Fira Code', monospace;
+      font-size: 12px;
+    }
+
+    .message :not(pre) > code {
+      background: var(--surface2);
+      padding: 2px 6px;
+      border-radius: 4px;
+      word-break: break-all;
+    }
+
+    .code-copy-btn {
+      position: absolute;
+      top: var(--space-1);
+      right: var(--space-2);
+      background: rgba(28, 16, 56, 0.8);
+      border: 1px solid rgba(var(--accent-rgb), 0.14);
+      color: var(--text-dim);
+      /* Single-glyph button (⧉ / ✓ / ✕) — needs a bigger type size than the old
+         10px word "Copy" to stay legible, and a fixed box so the glyph swap on
+         click doesn't make the button jump. */
+      font-size: 13px;
+      line-height: 1;
+      min-width: 22px;
+      text-align: center;
+      padding: 3px var(--space-1);
+      border-radius: var(--r-sm);
+      cursor: pointer;
+      opacity: 0.55;
+      transition: background var(--motion-fast) var(--ease-out),
+                  border-color var(--motion-fast) var(--ease-out),
+                  opacity var(--motion-fast) var(--ease-out);
+    }
+    .code-copy-btn:hover { opacity: 0.9; border-color: rgba(var(--accent-rgb), 0.28); }
+
+    .code-copy-btn:active {
+      opacity: 1;
+      background: rgba(var(--accent-bright-rgb), 0.2);
+    }
+
+    .code-copy-btn.copied {
+      color: var(--green);
+      border-color: rgba(52, 211, 153, 0.3);
+    }
+    /* Phone (12/10/2026, designer): at 0.55 and 41×21 the button was almost
+       invisible and too small for a finger. On touch screens it becomes a real
+       32px button, always readable, and its ::after takes the finger at 44×44.
+       The block gets a 44px top strip (the language badge already hangs in
+       it), so neither the button nor its touch area ever sits on the code.
+       The area stays INSIDE the <pre>: overflow-x:hidden would clip it. */
+    @media (hover: none), (pointer: coarse) {
+      .message pre:has(> .code-copy-btn) { padding-top: 44px; }
+      .code-copy-btn {
+        top: 6px;
+        right: 6px;
+        min-width: 44px;
+        min-height: 32px;
+        padding: 0 var(--space-3);
+        font-size: var(--fs-sm);
+        font-weight: 600;
+        opacity: 1;
+        color: var(--text);
+        background: rgba(var(--accent-bright-rgb), 0.14);
+        border-color: rgba(var(--accent-bright-rgb), 0.32);
+      }
+      .code-copy-btn::after {
+        content: '';
+        position: absolute;
+        left: -6px; right: -6px;
+        top: -6px; bottom: -6px;
+      }
+    }
+
+    .tool-card {
+      background: var(--surface-tool);
+      border: 1px solid rgba(var(--border-rgb), 0.12);
+      border-left: 2.5px solid rgba(var(--cyan-rgb), 0.3);
+      border-radius: 10px;
+      margin: 4px 0;
+      overflow: hidden;
+      max-width: 100%;
+      transition: border-color 0.2s ease;
+    }
+
+    .tool-card.open { border-color: rgba(var(--border-rgb), 0.15); }
+
+    .tool-card-header {
+      padding: 7px 11px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      color: var(--cyan);
+      opacity: 0.6;
+      transition: opacity 0.15s;
+    }
+
+    .tool-card-header:active { opacity: 1; }
+
+    .tool-card-header .arrow {
+      transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      font-size: 10px;
+    }
+    .tool-card.open .arrow { transform: rotate(90deg); }
+
+    .tool-card-body {
+      display: none;
+      padding: 8px 12px;
+      border-top: 1px solid rgba(var(--border-rgb), 0.05);
+      font-size: 11px;
+      overflow-x: auto;
+      word-break: break-all;
+      color: var(--text-dim);
+      font-family: 'Cascadia Code', monospace;
+    }
+
+    .tool-card.open .tool-card-body { display: block; }
+
+    /* --- Input Area / Composer --- */
+    #input-area {
+      flex-shrink: 0;
+      margin: 0 12px 12px;
+      /* When keyboard is reported open but WebView hasn't resized (resume bug),
+         --keyboard-height lifts the composer above the IME. When adjustResize
+         fired normally, --keyboard-height is 0 and this collapses to bottom-inset. */
+      margin-bottom: calc(max(12px, var(--bottom-inset)) + var(--keyboard-height, 0px));
+      /* [10/11/2026 BATTERIA ] Senza sfocatura: il riquadro non sta
+         sopra la chat (è sotto, nella colonna), dietro c'è solo lo sfondo fermo. */
+      background: linear-gradient(180deg, rgba(20, 14, 44, 0.72), rgba(10, 7, 26, 0.78));
+      border: 1px solid rgba(var(--border-rgb), 0.22);
+      border-radius: 24px;
+      padding: 6px 6px 6px 12px;
+      position: relative;
+      max-width: 100%;
+      overflow: visible;
+      box-shadow: var(--shadow-md), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+      transition: margin-bottom 0.15s ease,
+                  border-color var(--motion-base) var(--ease-out),
+                  box-shadow var(--motion-base) var(--ease-out),
+                  background var(--motion-base) var(--ease-out);
+    }
+
+    #input-area.focused {
+      border-color: rgba(var(--accent-bright-rgb), 0.45);
+      background: linear-gradient(180deg, rgba(28, 18, 60, 0.78), rgba(14, 10, 36, 0.82));
+      box-shadow: var(--shadow-lg),
+                  0 0 0 1px rgba(var(--accent-bright-rgb), 0.15),
+                  0 0 24px rgba(var(--accent-bright-rgb), 0.18),
+                  inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    }
+
+    #attachment-bar {
+      display: none;
+      gap: 8px;
+      padding: 4px 0 8px;
+      flex-wrap: wrap;
+    }
+
+    #attachment-bar.has-files { display: flex; }
+
+    .attachment-chip {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      padding: 4px 8px;
+      border-radius: 16px;
+      font-size: 12px;
+      color: var(--text-dim);
+    }
+
+    .attachment-chip .chip-size {
+      color: var(--text-faint, var(--text-dim));
+      opacity: 0.7;
+      margin-left: 2px;
+    }
+
+    .attachment-chip .remove {
+      background: none;
+      border: none;
+      color: var(--red);
+      cursor: pointer;
+      font-size: 14px;
+      padding: 0 2px;
+    }
+
+    #input-row {
+      display: flex;
+      align-items: flex-end;
+      gap: 6px;
+    }
+
+    /* 2026-08-16 round #4 — the paperclip LEFT the input row (more space for
+       typing): the visible "File" button now lives in the toolbar above
+       (quick-actions plugin) and forwards its tap here. The button stays in
+       the DOM as the INVISIBLE trigger holding all the picker wiring
+       (input.js: Capacitor native picker on phone + web file-input fallback),
+       so phone and PC behavior is untouched. */
+    #attach-btn { display: none; }
+
+    #send-btn {
+      background: none;
+      border: none;
+      color: var(--text-dim);
+      font-size: 18px;
+      cursor: pointer;
+      padding: 0;
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+      opacity: 0.4;
+    }
+
+    #send-btn.has-text {
+      color: var(--accent);
+      opacity: 1;
+    }
+
+    #send-btn:active {
+      transform: scale(0.9);
+    }
+
+    #send-btn:disabled {
+      opacity: 0.2;
+    }
+
+    .send-pulse {
+      animation: sendPulse 0.3s ease-out !important;
+    }
+    @keyframes sendPulse {
+      0% { transform: scale(1); }
+      40% { transform: scale(0.85); }
+      100% { transform: scale(1); }
+    }
+
+    #stop-btn {
+      display: none;
+      width: 44px;
+      height: 44px;
+      min-width: 44px;
+      touch-action: manipulation;
+      border-radius: 50%;
+      border: 1px solid rgba(239, 68, 68, 0.38);
+      background: rgba(239, 68, 68, 0.2);
+      color: var(--red);
+      font-size: 14px;
+      cursor: pointer;
+      padding: 0;
+      flex-shrink: 0;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+      opacity: 1;
+    }
+    #stop-btn:active { transform: scale(0.88); background: rgba(239, 68, 68, 0.25); }
+
+    /* V3 â€” Separate Mic and Send buttons (always visible) */
+    #mic-btn {
+      width: 44px;
+      height: 44px;
+      min-width: 44px;
+      touch-action: manipulation;
+      border-radius: 50%;
+      border: 1px solid rgba(var(--border-rgb), 0.28);
+      background: rgba(var(--border-rgb), 0.14);
+      color: var(--text-dim);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: all 0.2s ease;
+      padding: 0;
+      opacity: 0.85;
+    }
+    #mic-btn:active { transform: scale(0.88); opacity: 1; }
+    #mic-btn.recording {
+      background: rgba(239, 68, 68, 0.2);
+      border-color: rgba(239, 68, 68, 0.3);
+      color: var(--red);
+      opacity: 1;
+      animation: micPulse 1.2s ease-in-out infinite;
+    }
+    @keyframes micPulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+    }
+    #mic-btn.starting { opacity: 0.8; animation: micPulse 0.8s ease-in-out infinite; }
+    #mic-btn.stopping {
+      opacity: 0.9;
+      color: transparent;
+      border: 2px solid rgba(167, 139, 250, 0.25);
+      border-top-color: var(--accent-bright, #a78bfa);
+      background: transparent;
+      animation: micSpin 0.7s linear infinite;
+    }
+    @keyframes micSpin { to { transform: rotate(360deg); } }
+    /* Transcribing: a calm inline spinner ON the mic button — replaces the old
+       black "Trascrizione… -1 min" toast that flickered every few seconds. */
+    #mic-btn.transcribing {
+      opacity: 0.9;
+      color: transparent;
+      border: 2px solid rgba(167, 139, 250, 0.25);
+      border-top-color: var(--accent-bright, #a78bfa);
+      background: transparent;
+      animation: micSpin 0.7s linear infinite;
+    }
+    #mic-btn.transcribing::after { display: none !important; }
+    #mic-btn.mic-dictation::after {
+      content: "";
+      display: none;
+    }
+    #mic-btn.recording::after {
+      content: "";
+      display: block;
+      position: absolute;
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--red, #ef4444);
+      top: 4px; right: 4px;
+      box-shadow: 0 0 6px rgba(239,68,68,0.8);
+      animation: micDot 1s ease-in-out infinite;
+    }
+    #mic-btn { position: relative; }
+    @keyframes micDot {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+
+    #send-btn-new {
+      width: 44px;
+      height: 44px;
+      min-width: 44px;
+      touch-action: manipulation;
+      border-radius: 50%;
+      border: 1px solid rgba(var(--accent-bright-rgb),0.32);
+      background: rgba(var(--accent-bright-rgb),0.18);
+      color: var(--text-dim);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: transform var(--motion-fast) var(--ease-out),
+                  background var(--motion-base) var(--ease-out),
+                  box-shadow var(--motion-base) var(--ease-out),
+                  border-color var(--motion-base) var(--ease-out),
+                  opacity var(--motion-base) var(--ease-out);
+      padding: 0;
+      opacity: 0.85;
+    }
+    #send-btn-new.has-text {
+      background: linear-gradient(135deg, var(--accent), #8b5cf6);
+      border-color: transparent;
+      color: white;
+      box-shadow: 0 4px 20px rgba(var(--accent-bright-rgb), 0.45),
+                  0 0 0 1px rgba(var(--accent-bright-rgb), 0.25);
+      opacity: 1;
+    }
+    #send-btn-new.has-text:hover {
+      box-shadow: 0 6px 24px rgba(var(--accent-bright-rgb), 0.55),
+                  0 0 0 2px rgba(var(--accent-bright-rgb), 0.35);
+      transform: translateY(-1px);
+    }
+    #send-btn-new:active { transform: scale(0.88); }
+    #send-btn-new.has-text:active { transform: scale(0.92); }
+    #send-btn-new.uploading {
+      opacity: 0.5;
+      pointer-events: none;
+      animation: uploadPulse 1.2s ease-in-out infinite;
+    }
+    #send-btn-new:disabled { pointer-events: none; }
+    @keyframes uploadPulse {
+      0%, 100% { opacity: 0.4; }
+      50% { opacity: 0.8; }
+    }
+    #attachment-bar.uploading::after {
+      content: 'Uploading...';
+      display: block;
+      width: 100%;
+      font-size: 11px;
+      color: var(--accent-bright);
+      opacity: 0.8;
+      animation: uploadPulse 1.2s ease-in-out infinite;
+    }
+
+    /* --- TTS Listen Button --- */
+    .message.assistant .listen-btn {
+      position: absolute;
+      bottom: 6px;
+      right: 44px;
+      background: rgba(14, 8, 32, 0.8);
+      border: 1px solid rgba(var(--accent-rgb), 0.15);
+      color: var(--text-dim);
+      width: 28px;
+      height: 24px;
+      padding: 0;
+      line-height: 1;
+      border-radius: 6px;
+      cursor: pointer;
+      opacity: 0.7;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+      z-index: 2;
+    }
+    .message.assistant .listen-btn svg { display: block; width: 16px; height: 16px; }
+    /* Copy button geometry is role-independent (2026-08-20 round 2, punto 5) —
+       same 28x24 square, same 16px glyph, on Claude's bubbles and on the owner's.
+       The .listen-btn above stays assistant-only: only Claude gets read aloud. */
+    .message .copy-btn svg { display: block; width: 16px; height: 16px; }
+    .message .copy-btn {
+      width: 28px;
+      height: 24px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0.7;
+    }
+    .message.assistant:hover .listen-btn { opacity: 0.9; }
+    .message.assistant .listen-btn:active {
+      opacity: 1;
+      background: rgba(var(--accent-bright-rgb), 0.2);
+      border-color: var(--accent);
+    }
+    .message.assistant .listen-btn.speaking {
+      background: rgba(52, 211, 153, 0.15);
+      border-color: var(--green);
+      color: var(--green);
+      opacity: 1;
+    }
+
+    /* COMPOSER SIZING — ONE authority (2026-08-20 round 2, punto 4).
+       This box used to be sized by TWO mechanisms at once: `field-sizing:
+       content` (the browser sizing to content) and sessions.js autoResize()
+       (an explicit inline height). Whichever ran last won, which is why the
+       height was correct after typing but wrong after a programmatic .value
+       assignment, wrong after a reload, and wrong after switching sessions.
+       `field-sizing` is now GONE — autoResize() is the only thing that sets a
+       height, and min/max-height below are the only clamps.
+
+       min-height is deliberately equal to #send-btn's height (38px) and to
+       COMPOSER_MIN in sessions.js. #input-row aligns its children to flex-end,
+       so a textarea SHORTER than the buttons gets pushed down and the single
+       line of text (or the placeholder) reads as sitting low and half-clipped.
+       Matching the button height makes the empty composer align with the row,
+       and the 8px/8px padding centres the 21px line inside it. */
+    #message-input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      padding: 8px 6px;
+      color: var(--text);
+      font-size: 15px;
+      font-family: inherit;
+      resize: none;
+      min-height: 38px;
+      /* Must match COMPOSER_MAX in sessions.js autoResize(). */
+      max-height: 120px;
+      line-height: 1.4;
+      outline: none;
+    }
+    #message-input::placeholder { color: var(--text-dim); opacity: 0.45; }
+
+    /* --- Slash Command Picker --- */
+    #command-picker {
+      position: absolute;
+      bottom: 100%;
+      left: 8px;
+      right: 8px;
+      max-height: min(40vh, 260px);
+      overflow-y: auto;
+      overflow-x: hidden;
+      background: rgb(14, 10, 32);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      margin-bottom: 6px;
+      box-shadow: 0 -4px 20px rgba(0,0,0,0.6);
+      opacity: 0;
+      transform: translateY(8px);
+      pointer-events: none;
+      transition: opacity 0.15s ease, transform 0.15s ease;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) transparent;
+      z-index: 100;
+    }
+
+    #command-picker.show {
+      opacity: 1;
+      transform: translateY(0);
+      pointer-events: auto;
+    }
+
+    .command-picker-header {
+      position: sticky;
+      top: 0;
+      padding: 5px 10px;
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-dim);
+      background: rgb(14, 10, 32);
+      border-bottom: 1px solid var(--border);
+      z-index: 1;
+    }
+
+    .command-item {
+      padding: 6px 10px;
+      cursor: pointer;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+      transition: background 0.1s ease;
+    }
+
+    .command-item:last-child { border-bottom: none; }
+    .command-item:hover, .command-item.active { background: var(--surface2); }
+
+    .command-item.active .command-name { color: var(--text); }
+
+    .command-name {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--accent);
+    }
+    .command-name .match { color: var(--text); font-weight: 700; }
+    .command-desc {
+      font-size: 11px;
+      color: var(--text-dim);
+      margin-top: 1px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* --- Connection Banner --- */
+    #connection-banner {
+      display: none;
+      background: rgba(251, 191, 36, 0.06);
+      color: var(--orange);
+      text-align: center;
+      padding: 6px 12px;
+      padding-top: calc(6px + var(--top-inset));
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.3px;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      animation: bannerSlide 0.2s ease-out;
+    }
+
+    @keyframes bannerSlide {
+      from { transform: translateY(-100%); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    #connection-banner.show { display: block; }
+
+    /* --- Restart Changelog Popup --- */
+    #restart-changelog {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 1002;
+      background: rgba(4, 2, 12, 0.6);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      animation: fadeIn 0.3s ease;
+    }
+    #restart-changelog.show { display: flex; }
+    .changelog-card {
+      background: rgba(14, 8, 32, 0.95);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border: 1px solid rgba(var(--accent-rgb), 0.2);
+      border-radius: 20px;
+      padding: 24px;
+      width: 100%;
+      max-width: 320px;
+      /* Mai più alta dello schermo: il tasto OK resta sempre a portata (14/10). */
+      max-height: 80vh;
+      overflow-y: auto;
+      transform: scale(0.95);
+      animation: changelogPop 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    @keyframes changelogPop {
+      from { transform: scale(0.95) translateY(10px); opacity: 0; }
+      to { transform: scale(1) translateY(0); opacity: 1; }
+    }
+    .changelog-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    .changelog-orb {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 10px rgba(52, 211, 153, 0.5);
+    }
+    .changelog-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .changelog-list {
+      list-style: none;
+      padding: 0;
+      margin: 0 0 16px 0;
+    }
+    .changelog-list li {
+      font-size: 15px;
+      line-height: 1.4;
+      color: var(--text);
+      padding: 8px 0;
+      border-bottom: 1px solid rgba(var(--border-rgb), 0.06);
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+    }
+    .changelog-list li:last-child { border-bottom: none; }
+    .changelog-list li.changelog-more { color: var(--text-dim); font-size: 13px; }
+    .changelog-list li.changelog-more::before { display: none; }
+    .changelog-list li::before {
+      content: '';
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background: var(--accent);
+      flex-shrink: 0;
+      margin-top: 9px;
+    }
+    .changelog-dismiss {
+      width: 100%;
+      background: rgba(var(--accent-bright-rgb), 0.1);
+      border: 1px solid rgba(var(--accent-bright-rgb), 0.2);
+      color: var(--accent);
+      font-family: var(--font);
+      font-size: 15px;
+      font-weight: 600;
+      padding: 14px;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .changelog-dismiss:active {
+      transform: scale(0.97);
+      background: rgba(var(--accent-bright-rgb), 0.2);
+    }
+
+    /* --- General Toast --- */
+    #general-toast {
+      display: none;
+      position: fixed;
+      top: calc(56px + var(--top-inset));
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(14, 8, 32, 0.95);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-radius: 10px;
+      padding: 8px 16px;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.3px;
+      color: var(--text);
+      z-index: 1001;
+      animation: bannerSlide 0.2s ease-out;
+      white-space: nowrap;
+      pointer-events: none;
+    }
+    #general-toast.show { display: block; }
+    #general-toast.success { border: 1px solid rgba(52, 211, 153, 0.4); color: #34d399; }
+    #general-toast.warning { border: 1px solid rgba(251, 191, 36, 0.4); color: var(--orange); }
+    #general-toast.error { border: 1px solid rgba(248, 113, 113, 0.4); color: #f87171; }
+
+    /* [2026-09-10] Tolto il vestito di #undo-toast (l'"annulla" dopo una
+       cancellazione). Il riquadro c'era in index.html ma nessun JS lo ha mai
+       aperto: niente .show, niente bottone dentro. Tolto anche il div. */
+
+    /* --- Restart Overlay â€” TV-off effect --- */
+    #restart-overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      z-index: 9999;
+      background: var(--bg);
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+    }
+    #restart-overlay.show {
+      display: flex;
+    }
+
+    /* TV-off animation: screen collapses to a horizontal line, then a dot, then fades */
+    #restart-overlay.tv-off {
+      animation: tvOff 0.6s cubic-bezier(0.55, 0, 1, 0.45) forwards;
+    }
+    @keyframes tvOff {
+      0% { transform: scale(1, 1); filter: brightness(1); border-radius: 0; }
+      40% { transform: scale(1, 0.005); filter: brightness(2); border-radius: 0; }
+      70% { transform: scale(0.15, 0.005); filter: brightness(3); border-radius: 50%; }
+      90% { transform: scale(0.02, 0.002); filter: brightness(4); border-radius: 50%; }
+      100% { transform: scale(0, 0); filter: brightness(0); border-radius: 50%; }
+    }
+
+    /* After TV-off, show the restart screen */
+    #restart-overlay.restarting {
+      animation: none;
+      transform: none;
+      filter: none;
+      background: var(--bg);
+    }
+
+    /* Boot-up: CRT warm-up â€” quick bright flash then fade, scale settles */
+    #restart-overlay.tv-on {
+      animation: bootUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      pointer-events: none;
+      will-change: opacity, filter, transform;
+    }
+    @keyframes bootUp {
+      0%   { opacity: 1; filter: brightness(1.6); transform: scale(1.01); }
+      35%  { opacity: 0.85; filter: brightness(1.2); transform: scale(1.003); }
+      100% { opacity: 0; filter: brightness(1); transform: scale(1); }
+    }
+
+    /* Smooth out TV-off so the app doesn't flicker before the overlay takes over */
+    #app { will-change: auto; }
+    #app[style*="tvOff"] { will-change: transform, filter; }
+
+    /* Scanline flicker during restart */
+    .restart-scanlines {
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(
+        to bottom,
+        transparent,
+        transparent 2px,
+        rgba(var(--accent-bright-rgb), 0.03) 2px,
+        rgba(var(--accent-bright-rgb), 0.03) 4px
+      );
+      pointer-events: none;
+      opacity: 0.5;
+    }
+
+    /* Pulsing orb in center */
+    .restart-orb {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 20px rgba(var(--accent-bright-rgb), 0.5), 0 0 50px rgba(var(--accent-bright-rgb), 0.2);
+      animation: orbPulse 1.5s ease-in-out infinite;
+    }
+
+    /* [10/11/2026 BATTERIA ] Solo transform: l'alone (box-shadow fisso
+       sopra) cresce con la sfera, come prima, ma senza ridisegnarla a ogni
+       fotogramma (box-shadow animato = un ridisegno al fotogramma). */
+    @keyframes orbPulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.4); }
+    }
+
+    .restart-text {
+      font-family: var(--font);
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--accent);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      opacity: 0;
+      animation: restartTextIn 0.4s ease 0.3s forwards;
+    }
+
+    @keyframes restartTextIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 0.8; transform: translateY(0); }
+    }
+
+    .restart-sub {
+      font-family: var(--font);
+      font-size: 11px;
+      color: var(--text-dim);
+      opacity: 0;
+      animation: restartTextIn 0.4s ease 0.5s forwards;
+    }
+
+    .restart-retry {
+      display: none;
+      background: rgba(var(--accent-bright-rgb), 0.12);
+      border: 1px solid rgba(var(--accent-bright-rgb), 0.3);
+      color: var(--accent);
+      font-family: var(--font);
+      font-size: 12px;
+      font-weight: 600;
+      padding: 8px 24px;
+      border-radius: 12px;
+      cursor: pointer;
+      margin-top: 8px;
+      transition: all 0.2s ease;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .restart-retry:active {
+      transform: scale(0.95);
+      background: rgba(var(--accent-bright-rgb), 0.25);
+    }
+    .restart-retry.show { display: block; }
+
+    /* --- Boot Overlay â€” shown on initial page load --- */
+    #boot-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      z-index: 10000;
+      background: var(--bg);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 24px;
+    }
+    #boot-overlay.boot-ready {
+      animation: bootFadeOut 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      pointer-events: none;
+    }
+    @keyframes bootFadeOut {
+      0% { opacity: 1; }
+      100% { opacity: 0; }
+    }
+    #boot-overlay.boot-done { display: none; }
+    .boot-emblem {
+      font-family: var(--font);
+      font-size: 32px;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--accent), var(--cyan));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      animation: bootEmblemIn 0.6s ease forwards;
+    }
+    @keyframes bootEmblemIn {
+      0% { opacity: 0; transform: scale(0.8); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+    .boot-bar-track {
+      width: 120px;
+      height: 3px;
+      background: rgba(var(--accent-bright-rgb), 0.15);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    .boot-bar-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--accent), var(--cyan));
+      border-radius: 3px;
+      animation: bootBarFill 1.5s ease-out forwards;
+    }
+    @keyframes bootBarFill {
+      0% { width: 0%; }
+      60% { width: 70%; }
+      100% { width: 100%; }
+    }
+
+    /* --- Empty State / Team Launcher v2 --- */
+    #empty-state {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      flex: 1;
+      min-height: 0;
+      color: var(--text-dim);
+      gap: 16px;
+      padding: 16px;
+      text-align: center;
+      overflow: hidden;
+    }
+
+    #empty-state h2 {
+      font-size: 20px;
+      color: var(--text);
+      margin-top: 4px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+    }
+    #empty-state p { font-size: 13px; max-width: 280px; margin-bottom: 0; opacity: 0.5; }
+
+    /* === Recent sessions strip (empty-state hub, Stage 2 of UI refresh) === */
+    .recent-strip {
+      width: 100%;
+      max-width: 380px;
+      display: flex;
+      gap: var(--space-2);
+      overflow-x: auto;
+      overflow-y: hidden;
+      scroll-snap-type: x proximity;
+      -webkit-overflow-scrolling: touch;
+      padding: var(--space-1) 2px var(--space-2);
+      scrollbar-width: none;
+    }
+    .recent-strip[hidden] { display: none; }
+    .recent-strip::-webkit-scrollbar { display: none; }
+    .recent-pill {
+      flex-shrink: 0;
+      min-width: 130px;
+      max-width: 180px;
+      scroll-snap-align: start;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 2px;
+      padding: var(--space-2) var(--space-3);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--accent);
+      border-radius: var(--r-md);
+      color: var(--text);
+      text-align: left;
+      cursor: pointer;
+      font: inherit;
+      transition: background var(--motion-fast) var(--ease-out),
+                  border-color var(--motion-fast) var(--ease-out),
+                  transform var(--motion-fast) var(--ease-out);
+      -webkit-tap-highlight-color: transparent;
+    }
+    .recent-pill:hover {
+      background: var(--surface2);
+      border-color: var(--border-bright);
+    }
+    .recent-pill:active { transform: scale(0.97); }
+    .recent-pill.busy      { border-left-color: var(--green); }
+    .recent-pill.wrapping  { border-left-color: var(--orange); }
+
+    .recent-pill.team-151  { border-left-color: var(--accent); }
+    .recent-pill.team-tools{ border-left-color: var(--cyan); }
+    .recent-pill.team-spotify { border-left-color: #1db954; }
+    .recent-pill-title {
+      font-size: var(--fs-sm);
+      font-weight: 600;
+      color: var(--text);
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .recent-pill-time {
+      font-size: var(--fs-xs);
+      color: var(--text-dim);
+      opacity: 0.7;
+    }
+    /* [2026-09-22, secondo giro] Tolte le due righe
+       #empty-state.wiki-active .recent-strip (normale e :hover, quest'ultima
+       stava sotto il blocco @media qui sotto): sbiadivano la striscia dei
+       recenti mentre la ricerca wiki era aperta. La classe wiki-active la
+       metteva SOLO il modulo wiki, cancellato stamattina — non la scrive piu'
+       nessuno, quindi le due regole non si accendevano mai. */
+
+    /* [2026-09-10] Tolto il vestito di .launch-actions-row / .launch-action-btn
+       (~65 righe): li disegnava SOLO plugins/launch-actions/client.js, plugin
+       tolto oggi insieme al suo interruttore window.LAUNCHER_ACTIONS. Nessun
+       altro file costruisce quegli elementi — verificato con una ricerca in
+       tutto il repo. (Il vecchio launcher .launcher-* / .lc-* / .overseer-card
+       e' uscito anche lui il 12/10/2026: nessun file lo costruiva piu'.) */
+
+    /* No-scroll safety net: natural empty-state content is ~500px tall. On short
+       viewports (landscape phone, short desktop window) compact the paddings/gaps
+       so every tile stays visible — never scroll, never clip. */
+    @media (max-height: 640px) {
+      #empty-state { gap: 10px; padding: 10px 16px; }
+      #empty-state .recent-strip { padding-top: 2px; padding-bottom: 2px; }
+    }
+
+    /* --- Rename Dialog --- */
+    #rename-dialog {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 200;
+      background: rgba(0,0,0,0.6);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      align-items: center;
+      justify-content: center;
+    }
+
+    #rename-dialog.show { display: flex; }
+
+    #rename-box {
+      background: rgba(18, 10, 40, 0.95);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 24px;
+      width: 280px;
+    }
+
+    #rename-box h3 { margin-bottom: 14px; font-size: 16px; font-weight: 700; }
+
+    #rename-input {
+      width: 100%;
+      background: rgba(14, 8, 32, 0.5);
+      border: 1px solid rgba(var(--accent-rgb), 0.15);
+      border-radius: 12px;
+      padding: 10px 14px;
+      color: var(--text);
+      font-size: 15px;
+      font-family: inherit;
+      outline: none;
+      margin-bottom: 14px;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    #rename-input:focus {
+      border-color: rgba(var(--accent-rgb), 0.4);
+      box-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.12);
+    }
+
+    #rename-box .btn-row { display: flex; gap: 8px; justify-content: flex-end; }
+
+    #rename-box button {
+      padding: 8px 18px;
+      border-radius: 10px;
+      border: none;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    #rename-box button:active { transform: scale(0.95); }
+
+    #rename-cancel { background: var(--surface2); color: var(--text); }
+    #rename-save {
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 100%);
+      color: white;
+      box-shadow: 0 2px 12px var(--accent-glow);
+    }
+
+    /* --- Sidebar trash button --- */
+    .footer-sessions { display: flex; align-items: center; gap: 8px; }
+    .trash-btn {
+      width: 50px;
+      min-width: 50px;
+      align-self: stretch;
+      border-radius: 12px;
+      border: 1px solid rgba(var(--border-rgb), 0.28);
+      background: rgba(var(--border-rgb), 0.14);
+      color: var(--text-dim);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: all 0.15s ease;
+    }
+    .trash-btn:active { transform: scale(0.9); }
+    .trash-btn:hover { color: var(--text); }
+    .trash-btn { position: relative; }
+
+    /* [2026-10-12] Tolte le regole del pannello dei reperti del cestino
+       (contatore, elenco, blocco di consegna): pannello e rotte non ci sono piu'. */
+
+    /* --- Trash dialog --- */
+    #trash-dialog {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 200;
+      background: rgba(0,0,0,0.6);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      align-items: center;
+      justify-content: center;
+    }
+    #trash-dialog.show { display: flex; }
+    #trash-box {
+      background: rgba(18, 10, 40, 0.97);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 20px;
+      width: min(560px, 92vw);
+      max-height: 80vh;
+      display: flex;
+      flex-direction: column;
+    }
+    .trash-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+    .trash-head h3 { font-size: 16px; font-weight: 700; }
+    .trash-head-actions { display: flex; align-items: center; gap: 6px; }
+    /* #trash-observatory: regole tolte il 2026-08-20 (Osservatorio staccato dal
+       pannello Cestino); il 2026-09-10 è sparito anche il plugin. */
+    #trash-close { background: none; border: none; color: var(--text-dim); font-size: 24px; line-height: 1; cursor: pointer; padding: 0 4px; }
+    #trash-list { overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
+    /* `hidden` attribute must beat the display:flex rules above (id+attr specificity) */
+    #trash-list[hidden], #trash-viewer[hidden] { display: none !important; }
+    .trash-empty { color: var(--text-dim); text-align: center; padding: 24px 0; font-size: 14px; }
+    .trash-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: rgba(14, 8, 32, 0.5);
+      border: 1px solid rgba(var(--accent-rgb), 0.12);
+    }
+    .trash-item-info { display: flex; flex-direction: column; min-width: 0; }
+    .trash-item-title { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .trash-item-meta { font-size: 11px; color: var(--text-dim); margin-top: 2px; }
+    /* Model pill in the trash row — same visual family as the session-card pill
+       so an archived chat reads the same as a live one. */
+    .trash-item-model {
+      display: inline-block;
+      margin-right: 6px;
+      padding: 1px 6px;
+      border-radius: 999px;
+      font-size: 10px;
+      line-height: 1.5;
+      color: var(--accent-bright, var(--accent));
+      background: rgba(var(--accent-rgb), 0.10);
+      border: 1px solid rgba(var(--accent-rgb), 0.20);
+      vertical-align: 1px;
+    }
+    .trash-item-model.is-unknown {
+      color: var(--text-dim);
+      background: rgba(255, 255, 255, 0.04);
+      border-color: rgba(255, 255, 255, 0.08);
+      font-style: italic;
+    }
+    .trash-item-actions { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+    .trash-item-actions button {
+      padding: 6px 10px;
+      border-radius: 8px;
+      border: none;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      background: var(--surface2);
+      color: var(--text);
+      transition: all 0.15s ease;
+    }
+    .trash-item-actions button:active { transform: scale(0.92); }
+    .trash-restore { background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 100%) !important; color: #fff !important; }
+    .trash-purge { color: var(--red) !important; font-size: 16px !important; line-height: 1; padding: 4px 9px !important; }
+    #trash-viewer { display: flex; flex-direction: column; overflow: hidden; }
+    .trash-viewer-head { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+    #trash-viewer-title { flex: 1; font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .trash-vbtn {
+      width: 34px;
+      height: 34px;
+      min-width: 34px;
+      border-radius: 9px;
+      border: 1px solid rgba(var(--border-rgb), 0.32);
+      background: rgba(var(--border-rgb), 0.16);
+      color: var(--text-dim);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      padding: 0;
+      transition: all 0.15s ease;
+    }
+    .trash-vbtn:hover { color: var(--text); }
+    .trash-vbtn:active { transform: scale(0.9); }
+    .trash-vbtn.copied {
+      background: rgba(52, 211, 153, 0.15);
+      border-color: var(--green);
+      color: var(--green);
+    }
+    #trash-viewer-text {
+      overflow-y: auto;
+      white-space: pre-wrap;
+      word-break: break-word;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 12px;
+      line-height: 1.5;
+      color: var(--text);
+      background: rgba(14, 8, 32, 0.5);
+      border-radius: 12px;
+      padding: 12px;
+      margin: 0;
+    }
+
+    /* --- Link Confirmation Dialog --- */
+    #link-dialog {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 200;
+      background: rgba(0,0,0,0.6);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      align-items: center;
+      justify-content: center;
+    }
+    #link-dialog.show { display: flex; }
+    #link-box {
+      background: rgba(18, 10, 40, 0.95);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 24px;
+      width: 300px;
+    }
+    #link-box h3 { margin-bottom: 10px; font-size: 16px; font-weight: 700; }
+    #link-url-preview {
+      font-size: 12px;
+      color: var(--dim);
+      word-break: break-all;
+      margin-bottom: 18px;
+      line-height: 1.4;
+      max-height: 60px;
+      overflow: hidden;
+    }
+    #link-box .btn-row { display: flex; gap: 8px; justify-content: flex-end; }
+    #link-box button {
+      padding: 8px 18px;
+      border-radius: 10px;
+      border: none;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    #link-box button:active { transform: scale(0.95); }
+    #link-cancel { background: var(--surface2); color: var(--text); }
+    #link-open {
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 100%);
+      color: white;
+      box-shadow: 0 2px 12px var(--accent-glow);
+    }
+
+    /* --- Streaming text (incrementally markdown-rendered) --- */
+    .streaming-text {
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+      font-family: inherit;
+      line-height: 1.5;
+      min-height: 16px;
+      max-width: 100%;
+      overflow: visible;
+    }
+
+    /* Smooth transition from streaming to finalized markdown */
+    .message.finalizing .streaming-text {
+      animation: fadeSwap 0.2s ease;
+    }
+    @keyframes fadeSwap {
+      0% { opacity: 0.5; transform: translateY(1px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+
+    /* --- Streaming cursor --- */
+    .message.assistant.streaming:not(.thinking-state) .streaming-text::after {
+      content: '';
+      display: inline-block;
+      width: 2px;
+      height: 14px;
+      background: var(--accent);
+      margin-left: 1px;
+      vertical-align: text-bottom;
+      box-shadow: 0 0 6px rgba(var(--accent-bright-rgb), 0.6);
+    }
+
+    /* --- Thinking dots (visible waiting state) --- */
+    .thinking-dots {
+      display: flex;
+      gap: 6px;
+      padding: 6px 4px;
+      align-items: center;
+    }
+    .thinking-dots span {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--accent);
+      opacity: 0.35;
+    }
+    .thinking-dots span:nth-child(2) { opacity: 0.65; }
+    .thinking-dots span:nth-child(3) { opacity: 1; box-shadow: 0 0 6px rgba(var(--accent-bright-rgb), 0.6); }
+
+    /* Thinking state â€” subtle glow on the message bubble */
+    .message.assistant.thinking-state {
+      border-color: rgba(var(--border-rgb), 0.12);
+      box-shadow: 0 1px 8px rgba(0, 0, 0, 0.12), 0 0 20px rgba(var(--glow-rgb), 0.04);
+    }
+
+    /* Live thinking text */
+    .thinking-text {
+      font-size: 12px;
+      line-height: 1.5;
+      color: var(--text-dim);
+      font-style: italic;
+      opacity: 0.7;
+      max-height: 120px;
+      overflow-y: auto;
+      padding: 4px 0;
+      white-space: pre-wrap;
+      word-break: break-word;
+      mask-image: linear-gradient(to bottom, transparent 0%, black 12%, black 88%, transparent 100%);
+      -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 12%, black 88%, transparent 100%);
+    }
+    .thinking-text::-webkit-scrollbar { width: 3px; }
+    .thinking-text::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+    /* Collapsed thinking (after response starts) */
+    .thinking-collapsed {
+      font-size: 11px;
+      color: var(--text-dim);
+      opacity: 0.8;          /* 12/10: 0.5 = 2,8:1 */
+      cursor: pointer;
+      padding: 2px 0 4px;
+      user-select: none;
+    }
+    .thinking-collapsed:hover { opacity: 1; }
+    .thinking-expanded {
+      max-height: 200px;
+      overflow-y: auto;
+      font-size: 12px;
+      color: var(--text-dim);
+      font-style: italic;
+      opacity: 0.6;
+      white-space: pre-wrap;
+      word-break: break-word;
+      padding: 4px 0 8px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 8px;
+    }
+
+    /* [2026-10-04] Risposta rifatta dal controllo delle regole: la versione
+       scartata, chiusa in una riga grigia sopra quella buona (chat.js). */
+    .redo-row {
+      margin: 4px 0 2px;
+      font-size: 12px;
+      color: var(--text-dim);
+    }
+    .redo-label {
+      display: inline-block;
+      cursor: pointer;
+      opacity: 0.7;
+      padding: 6px 0;
+      user-select: none;
+    }
+    .redo-label:hover, .redo-label:focus-visible { opacity: 1; }
+    .redo-text {
+      max-height: 260px;
+      overflow-y: auto;
+      opacity: 0.6;
+      padding: 4px 0 8px 10px;
+      border-left: 2px solid var(--text-dim);
+      word-break: break-word;
+    }
+
+    .message.assistant.streaming {
+      animation: slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    /* --- Session enter/exit transitions --- */
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(10px) scale(0.98); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    /* --- Options buttons (parsed from <options> blocks) --- */
+    .options-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid rgba(var(--border-rgb), 0.08);
+    }
+
+    .option-btn {
+      background: rgba(var(--accent-bright-rgb), 0.08);
+      border: 1px solid rgba(var(--border-rgb), 0.15);
+      color: var(--accent);
+      padding: 7px 14px;
+      border-radius: 12px;
+      font-size: 13px;
+      font-weight: 500;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .option-btn:active {
+      transform: scale(0.94);
+      background: rgba(109, 40, 217, 0.25);
+      border-color: var(--accent);
+      box-shadow: 0 0 16px rgba(var(--accent-rgb), 0.2);
+    }
+
+    /* --- Tool detail in activity log --- */
+    .al-detail {
+      font-size: 11px;
+      color: var(--text-dim);
+      opacity: 0.7;
+      margin-left: 4px;
+      max-width: 200px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* --- Scroll-to-bottom FAB (pill) ---
+       2026-08-16 redesign: SVG chevron instead of the text arrow, stronger
+       contrast, and — crucially — anchored to the composer: chat.js measures
+       #input-area's top edge (ResizeObserver + resize) and publishes
+       --fab-bottom, so the pill ALWAYS floats just above the writing island
+       (growing textarea, toolbar row, keyboard — all accounted for) and never
+       overlaps it. The 70px+inset value is only the pre-measure fallback. */
+    #scroll-bottom-btn {
+      display: none;
+      position: fixed;
+      bottom: var(--fab-bottom, calc(70px + var(--bottom-inset)));
+      right: 16px;
+      height: 36px;
+      min-width: 36px;
+      padding: 0 12px;
+      border-radius: 18px;
+      background: rgba(20, 12, 44, 0.95);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(var(--accent-rgb), 0.45);
+      color: var(--accent-bright, var(--accent));
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      z-index: 50;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      box-shadow: 0 6px 24px rgba(0,0,0,0.5), 0 0 18px rgba(var(--accent-rgb), 0.22);
+      -webkit-tap-highlight-color: transparent;
+      transition: bottom 0.15s ease, transform 0.2s ease, opacity 0.2s ease;
+      animation: fabPop 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @keyframes fabPop {
+      from { opacity: 0; transform: scale(0.8) translateY(8px); }
+      to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    #scroll-bottom-btn:active {
+      transform: scale(0.92);
+    }
+
+    #scroll-bottom-btn .fab-arrow {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    #scroll-bottom-btn .fab-arrow svg { display: block; }
+    #scroll-bottom-btn .fab-count {
+      font-size: 11px;
+      color: var(--accent2);
+    }
+    #scroll-bottom-btn .fab-count:empty { display: none; }
+
+    #scroll-bottom-btn.visible { display: flex; }
+
+    /* --- Inline Activity Log (single-line, fading between steps) --- */
+    #inline-activity {
+      display: none;
+      background: none;
+      border-top: 1px solid rgba(var(--border-rgb), 0.08);
+      border-radius: 0;
+      padding: 6px 0 0 0;
+      margin: 6px 0 0 0;
+      max-width: 100%;
+      font-size: 12px;
+      color: var(--text);
+      box-shadow: none;
+      overflow: hidden;
+      min-height: 28px;
+    }
+
+    #inline-activity.active { display: block; }
+
+    /* Hide all completed entries â€” only current step visible */
+    .activity-log-item {
+      display: none;
+    }
+
+    /* Done summary (shown after completion) */
+    .activity-log-item.done {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 3px 0;
+      font-size: 12px;
+    }
+
+    .activity-log-item .al-icon {
+      flex-shrink: 0;
+      font-size: 11px;
+      opacity: 0.7;
+    }
+
+    .activity-log-item.done .al-icon { color: var(--green); }
+
+    .activity-log-item .al-text {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      opacity: 0.7;
+      font-size: 12px;
+    }
+
+    .activity-collapsed { display: none; }
+
+    .activity-current {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 2px 0;
+      color: var(--text);
+      font-size: 13px;
+      font-weight: 500;
+      animation: activityFadeIn 0.3s ease;
+    }
+
+    @keyframes activityFadeIn {
+      from { opacity: 0; transform: translateY(2px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .activity-current .activity-spinner {
+      width: 14px; height: 14px;
+      border: 2px solid var(--accent);
+      border-radius: 50%;
+      box-shadow: 0 0 6px rgba(var(--accent-bright-rgb), 0.5);
+      flex-shrink: 0;
+    }
+
+    .activity-elapsed {
+      font-size: 11px;
+      color: var(--text-dim);
+      opacity: 0.5;
+      margin-left: auto;
+    }
+
+    .al-detail {
+      color: var(--text-dim);
+      font-weight: 400;
+    }
+
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+    .activity-spinner {
+      width: 12px; height: 12px;
+      border: 2px solid var(--accent);
+      border-right-color: var(--accent2);
+      border-radius: 50%;
+      box-shadow: 0 0 6px rgba(var(--accent-bright-rgb), 0.5);
+    }
+
+    ::-webkit-scrollbar { width: 3px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(var(--border-rgb), 0.12); border-radius: 2px; }
+
+    /* --- Lab Panel --- */
+    #apps-btn {
+      background: none;
+      border: none;
+      color: var(--text-dim);
+      font-size: 17px;
+      cursor: pointer;
+      padding: 10px;
+      min-width: 44px;
+      min-height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
+      opacity: 0.7;
+      transition: all 0.2s ease;
+      -webkit-tap-highlight-color: transparent;
+      flex-shrink: 0;
+    }
+    #apps-btn:active {
+      opacity: 1;
+      background: var(--surface2);
+    }
+    #apps-btn.panel-open {
+      opacity: 1;
+      color: var(--accent);
+    }
+    /* --- Apps Panel (right sidebar) --- */
+    #apps-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(4, 2, 12, 0.45);
+      backdrop-filter: blur(2px);
+      -webkit-backdrop-filter: blur(2px);
+      z-index: 850;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+    }
+    #apps-overlay.show {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    #apps-panel {
+      position: fixed;
+      top: 0; right: 0; bottom: 0;
+      width: 320px;
+      max-width: 85vw;
+      background: rgba(8, 6, 22, 0.92);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border-left: 1px solid rgba(var(--border-rgb), 0.1);
+      transform: translateX(100%);
+      transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+      z-index: 851;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    #apps-panel.open { transform: translateX(0); }
+    /* #apps-header: box, line and title come from .panel-header /
+       .panel-title (2026-10-16), shared with the Sessions heading. The title
+       takes the middle (flex:1): arrow on the left, X on the right. With the
+       back arrow showing, the arrow itself is the left margin. */
+    #apps-header:has(#apps-back:not([hidden])) { padding-left: var(--space-2); }
+    /* Gemella della X, specchiata a sinistra (round 8). */
+    #apps-back {
+      background: none;
+      border: none;
+      color: var(--text-dim);
+      font-size: 20px;
+      cursor: pointer;
+      padding: 4px 8px;
+      margin-right: 4px;
+      border-radius: 6px;
+      transition: all 0.15s;
+      flex-shrink: 0;
+      line-height: 1;
+    }
+    #apps-back:hover { color: var(--text); background: rgba(255,255,255,0.06); }
+    #apps-close {
+      background: none;
+      border: none;
+      color: var(--text-dim);
+      font-size: 22px;
+      cursor: pointer;
+      padding: 4px 8px;
+      border-radius: 6px;
+      transition: all 0.15s;
+    }
+    #apps-close:hover { color: var(--text); background: rgba(255,255,255,0.06); }
+    /* Fixed action tiles — square, 2×2 grid, deliberately distinct from the
+       app cards below (rows). Backup / Notes / Pulizia / Update. */
+    #apps-actions {
+      padding: 12px 12px 0;
+      flex-shrink: 0;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    #apps-actions:empty { display: none; }
+    #apps-list {
+      padding: 12px;
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    /* Grouped app rows — no text headers; grouping reads from colour + spacing.
+       Each group is a stack of native .apps-card rows; groups separated by a gap,
+       the System group pushed to the bottom, quieter and hairline-divided. */
+    .apps-group { display: flex; flex-direction: column; gap: 6px; }
+    /* One hairline BETWEEN each group (mine|school, school|system) — not before
+       the first and not trailing at the very bottom. */
+    .apps-group + .apps-group { margin-top: 14px; padding-top: 14px; border-top: 1px solid rgba(255,255,255,0.07); }
+
+    /* Mine = the app's own violet (native accent) — applies to ALL mine items,
+       including non-plugin ones like the notes check, so the group looks consistent. */
+    .apps-group-mine .apps-card { background: rgba(167,139,250,0.08); border-color: rgba(167,139,250,0.15); }
+    .apps-group-mine .apps-card:hover { background: rgba(167,139,250,0.14); }
+    .apps-group-mine .apps-card-icon { color: #a78bfa; }
+    /* System = grey. */
+    .apps-group-system .apps-card { background: rgba(255,255,255,0.025); border-color: rgba(255,255,255,0.05); padding: 9px 12px; }
+    .apps-group-system .apps-card:hover { background: rgba(255,255,255,0.05); }
+    .apps-group-system .apps-card-icon { color: #9a9ab0; }
+    .apps-group-system .apps-card-name { color: #c8c8d6; }
+    .apps-group-system .apps-card-desc { color: #8a8aa0; }   /* 12/10: #6d6d82 = 3,9:1 */
+
+    /* Report modal for the mechanical utilities (update / cleanup / notes). */
+    #report-modal { position: fixed; inset: 0; z-index: 9000; display: flex; align-items: flex-end; justify-content: center; }
+    #report-modal .report-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(2px); }
+    #report-modal .report-sheet { position: relative; width: 100%; max-width: 640px; max-height: 82vh; display: flex; flex-direction: column;
+      background: #0d0a24; border: 1px solid rgba(167,139,250,0.18); border-radius: 18px 18px 0 0; box-shadow: 0 -8px 40px rgba(0,0,0,0.5); }
+    #report-modal .report-head { display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; border-bottom: 1px solid rgba(255,255,255,0.07);
+      font-size: 15px; font-weight: 650; color: #e8e4f4; }
+    #report-modal .report-close { background: none; border: none; color: #9086b4; font-size: 24px; line-height: 1; cursor: pointer; padding: 0 4px; }
+    #report-modal .report-body { margin: 0; padding: 16px 18px calc(env(safe-area-inset-bottom) + 20px); overflow: auto; -webkit-overflow-scrolling: touch;
+      font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 12.5px; line-height: 1.55; color: #cdc7e0; white-space: pre-wrap; word-break: break-word; }
+
+    .apps-card {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      cursor: pointer;
+      background: rgba(var(--accent-bright-rgb), 0.04);
+      border: 1px solid rgba(var(--border-rgb), 0.08);
+      transition: all 0.15s;
+    }
+    .apps-card:hover { background: rgba(var(--accent-bright-rgb), 0.1); }
+    .apps-card:active { transform: scale(0.98); }
+    .apps-card.active {
+      background: rgba(var(--accent-bright-rgb), 0.12);
+      border-color: rgba(var(--accent-bright-rgb), 0.25);
+    }
+    .apps-card-icon { font-size: 20px; flex-shrink: 0; color: var(--accent-bright); display: inline-flex; align-items: center; justify-content: center; }
+
+    /* Gray — Calendar */
+    .apps-card[data-plugin-id="calendar"] {
+      background: rgba(255, 255, 255, 0.04);
+      border-color: rgba(255, 255, 255, 0.08);
+    }
+    .apps-card[data-plugin-id="calendar"]:hover { background: rgba(255, 255, 255, 0.08); }
+    .apps-card[data-plugin-id="calendar"] .apps-card-icon { color: rgba(255, 255, 255, 0.55); }
+    .apps-card-info { flex: 1; min-width: 0; }
+    .apps-card-name { font-size: 13px; font-weight: 600; color: var(--text); }
+    .apps-card-desc { font-size: 11px; color: var(--text-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    #apps-container {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+      -webkit-overflow-scrolling: touch;
+    }
+    /* Only draw the top hairline when an app is actually open (container has
+       content); empty in list view it must not leave a stray line at the bottom. */
+    #apps-container:not(:empty) { border-top: 1px solid rgba(var(--border-rgb), 0.08); }
+    .apps-empty {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 20px;
+      text-align: center;
+      color: var(--text-dim);
+      font-size: 13px;
+    }
+    .apps-empty-icon { font-size: 32px; margin-bottom: 12px; opacity: 0.4; }
+    .app-mount { width: 100%; height: 100%; display: flex; flex-direction: column; overflow: hidden; }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.6; }
+    }
+
+    @keyframes loginFadeIn {
+      0%   { opacity: 0; transform: scale(0.96); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+
+    #login-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 500;
+      background: var(--bg-deep);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 28px;
+      padding: 20px;
+      animation: loginFadeIn 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+      overflow: hidden;
+    }
+
+    /* Fog background on login â€” matches Soft Fog design */
+    #login-overlay::before {
+      content: '';
+      position: absolute;
+      inset: -15%;
+      width: 130%;
+      height: 130%;
+      background:
+        radial-gradient(ellipse 80% 60% at 30% 70%, rgba(80, 40, 160, 0.22), transparent 65%),
+        radial-gradient(ellipse 60% 50% at 70% 25%, rgba(60, 30, 140, 0.18), transparent 60%),
+        radial-gradient(ellipse 90% 55% at 50% 50%, rgba(100, 60, 200, 0.1), transparent 55%);
+      pointer-events: none;
+      z-index: 0;
+      /* [10/11/2026 ] Tolta `animation: fogDrift … infinite`: i
+         @keyframes fogDrift non sono mai esistiti, non girava niente. Una
+         volta scritti avrebbe girato per sempre su un livello sfocato. */
+      filter: blur(40px);
+    }
+
+    /* Stars on login â€” bright accent layer */
+    #login-overlay::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image:
+        radial-gradient(1.5px 1.5px at 8% 12%, rgba(196, 167, 255, 0.6), transparent),
+        radial-gradient(1px 1px at 22% 28%, rgba(228, 223, 240, 0.4), transparent),
+        radial-gradient(2px 2px at 38% 8%, rgba(192, 132, 252, 0.7), transparent),
+        radial-gradient(1px 1px at 52% 42%, rgba(228, 223, 240, 0.35), transparent),
+        radial-gradient(1.5px 1.5px at 68% 22%, rgba(196, 167, 255, 0.55), transparent),
+        radial-gradient(1px 1px at 82% 55%, rgba(228, 223, 240, 0.4), transparent),
+        radial-gradient(1px 1px at 12% 65%, rgba(228, 223, 240, 0.3), transparent),
+        radial-gradient(2px 2px at 30% 82%, rgba(192, 132, 252, 0.6), transparent),
+        radial-gradient(1.5px 1.5px at 65% 72%, rgba(196, 167, 255, 0.5), transparent),
+        radial-gradient(1px 1px at 88% 88%, rgba(228, 223, 240, 0.45), transparent),
+        radial-gradient(2px 2px at 18% 48%, rgba(var(--accent-bright-rgb), 0.6), transparent),
+        radial-gradient(1.5px 1.5px at 48% 18%, rgba(192, 132, 252, 0.5), transparent),
+        radial-gradient(2px 2px at 78% 68%, rgba(var(--accent-bright-rgb), 0.55), transparent),
+        radial-gradient(2.5px 2.5px at 55% 85%, rgba(192, 132, 252, 0.65), transparent);
+      pointer-events: none;
+      z-index: 0;
+      /* [10/11/2026 ] Tolta `animation: twinkle3 … infinite`: anche qui
+         i @keyframes non esistevano, le stelle sono sempre state ferme. */
+    }
+
+    #login-overlay > * { position: relative; z-index: 1; }
+
+    #login-overlay.hidden { display: none; }
+
+    /* Glowing 151 emblem */
+    .login-emblem {
+      font-size: 72px;
+      font-weight: 900;
+      letter-spacing: -4px;
+      background: linear-gradient(135deg, rgba(var(--accent-bright-rgb), 0.15) 0%, rgba(192, 132, 252, 0.08) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      text-shadow: none;
+      position: relative;
+      line-height: 1;
+      margin-bottom: -10px;
+      /* [10/11/2026 BATTERIA ] Due respiri e poi fermo sul primo
+         fotogramma (stessa luce). Infinita teneva la pagina di accesso a
+         60-120 fotogrammi/s con un ridisegno del filtro a ogni fotogramma. */
+      opacity: 0.6;
+      filter: drop-shadow(0 0 20px rgba(var(--accent-rgb), 0.15));
+      animation: emblemPulse 4s ease-in-out 2;
+    }
+
+    @keyframes emblemPulse {
+      0%, 100% { filter: drop-shadow(0 0 20px rgba(var(--accent-rgb), 0.15)); opacity: 0.6; }
+      50% { filter: drop-shadow(0 0 40px rgba(var(--accent-rgb), 0.3)); opacity: 0.8; }
+    }
+
+    #login-overlay h2 {
+      font-size: 32px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 50%, #e9d5ff 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin: 0;
+      text-align: center;
+    }
+
+    #login-overlay .login-subtitle {
+      font-size: 11px;
+      color: var(--text-dim);
+      margin-top: -18px;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      opacity: 0.5;
+    }
+
+    /* [12/11/2026] Tolti tasto dell'impronta, «or» e offerta «Set Up
+       Fingerprint» della pagina d'accesso: l'impronta non c'è più. */
+
+    /* Server config link on login screen */
+    #server-config-link {
+      margin-top: 24px;
+      font-size: 11px;
+      color: var(--text-dim);
+      opacity: 0.5;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+    #server-config-link:hover { opacity: 1; }
+
+    /* Server config overlay */
+    #server-config-overlay {
+      position: fixed; inset: 0; z-index: 100000;
+      background: rgba(6, 4, 26, 0.92);
+      display: flex; align-items: center; justify-content: center;
+      -webkit-backdrop-filter: blur(12px);
+      backdrop-filter: blur(12px);
+    }
+    #server-config-overlay.hidden { display: none; }
+    .server-config-panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 28px 24px;
+      width: 90%; max-width: 360px;
+      position: relative;
+      -webkit-backdrop-filter: blur(20px);
+      backdrop-filter: blur(20px);
+    }
+    .server-config-panel h3 {
+      font-family: var(--font);
+      font-size: 16px; font-weight: 600;
+      color: var(--accent);
+      margin: 0 0 6px 0;
+    }
+    .server-config-panel p {
+      font-family: var(--font);
+      font-size: 12px; color: var(--text-dim);
+      margin: 0 0 16px 0;
+    }
+    #server-url-input {
+      width: 100%; box-sizing: border-box;
+      background: rgba(10, 5, 25, 0.7);
+      border: 1px solid rgba(var(--accent-rgb), 0.15);
+      border-radius: 12px;
+      padding: 12px 16px;
+      color: var(--text); font-family: var(--mono); font-size: 13px;
+      outline: none;
+    }
+    #server-url-input:focus { border-color: rgba(var(--accent-rgb), 0.4); }
+    #server-url-input::placeholder { color: rgba(var(--accent-bright-rgb), 0.3); }
+    .server-config-presets {
+      display: flex; gap: 8px; margin: 12px 0;
+    }
+    .server-preset {
+      flex: 1; padding: 8px; border-radius: 10px;
+      border: 1px solid var(--border);
+      background: transparent; color: var(--text-dim);
+      font-family: var(--font); font-size: 11px;
+      cursor: pointer; transition: all 0.2s;
+    }
+    .server-preset:hover { border-color: var(--accent); color: var(--text); }
+    #server-test-status {
+      font-family: var(--font); font-size: 12px;
+      min-height: 20px; margin: 8px 0;
+      text-align: center;
+    }
+    .server-config-actions {
+      display: flex; gap: 8px;
+    }
+    #server-test-btn, #server-save-btn {
+      flex: 1; padding: 10px; border-radius: 12px;
+      font-family: var(--font); font-size: 13px; font-weight: 600;
+      cursor: pointer; border: none;
+    }
+    #server-test-btn {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-dim);
+    }
+    #server-save-btn {
+      background: linear-gradient(135deg, var(--accent), var(--cyan));
+      color: white;
+    }
+    #server-config-close {
+      position: absolute; top: 12px; right: 16px;
+      background: none; border: none;
+      color: var(--text-dim); font-size: 20px;
+      cursor: pointer; padding: 4px;
+    }
+
+    /* Login form container */
+    .login-form {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+      width: 100%;
+      max-width: 300px;
+    }
+
+    #login-input {
+      width: 100%;
+      background: rgba(10, 5, 25, 0.7);
+      border: 1px solid rgba(var(--accent-rgb), 0.15);
+      border-radius: 16px;
+      padding: 14px 20px;
+      color: var(--text);
+      font-size: 15px;
+      font-family: inherit;
+      outline: none;
+      text-align: center;
+      box-shadow: inset 0 3px 8px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255,255,255,0.02);
+      transition: border-color 0.25s, box-shadow 0.25s;
+    }
+
+    #login-input:focus {
+      border-color: rgba(var(--accent-bright-rgb), 0.45);
+      box-shadow: inset 0 3px 8px rgba(0, 0, 0, 0.3), 0 0 0 3px rgba(var(--accent-rgb), 0.13), 0 0 24px rgba(var(--accent-rgb), 0.1);
+    }
+    #login-input::placeholder { color: rgba(var(--accent-bright-rgb), 0.3); }
+
+    #login-btn {
+      width: 100%;
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 100%);
+      color: white;
+      border: none;
+      padding: 14px 44px;
+      border-radius: 50px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 24px rgba(var(--accent-rgb), 0.45), 0 0 0 1px rgba(var(--accent-bright-rgb), 0.15);
+      letter-spacing: 0.5px;
+    }
+
+    #login-btn:hover {
+      box-shadow: 0 6px 32px rgba(var(--accent-rgb), 0.6), 0 0 0 1px rgba(var(--accent-bright-rgb), 0.25);
+      transform: translateY(-1px);
+    }
+
+    #login-btn:active {
+      transform: scale(0.96);
+      box-shadow: 0 2px 16px var(--accent-glow);
+    }
+
+    #login-error {
+      color: var(--red);
+      font-size: 12px;
+      min-height: 18px;
+      font-weight: 500;
+      text-align: center;
+    }
+
+    /* 151 Watermark â€” removed (invisible, wasted compositing) */
+
+    /* [2026-10-12] Tolto il contenitore dell'intrattenimento (#entertainment,
+       .view-entertainment, ent-fade-in): è l'app 151 Entertainment. */
+
+    /* Rally Radio Player Overlay removed 2026-04-14. */
+
+/* === Slot System === */
+.slot {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: nowrap;
+}
+.slot--hidden {
+  display: none !important;
+}
+
+/* [2026-10-16] TOLTA LA BARRA NERA IN ALTO: #status-bar-slot >
+   #main-topbar (pillola dei consumi + «The 151 Machine» al centro) non esiste
+   più, e con lei le sue regole (zone, wordmark, .tb-chip della barra, ritocchi
+   telefono vero). #header è di nuovo la cima della pagina: la sua padding-top
+   calc(10px + var(--top-inset)) libera da sola la fascia di sistema Android.
+   Le percentuali vivono nelle intestazioni qui sotto. */
+
+/* === Panel headings: SESSIONS (left sidebar) and PLUGINS (right panel) ===
+   2026-10-16, il proprietario. One family for both: same height as #header (44px row +
+   10px above and below + the system inset), so on the PC the line under the
+   Sessions heading continues the line under the chat row; same divider token
+   as #header::after; same title face. */
+.panel-header {
+  position: relative;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: calc(64px + var(--top-inset));
+  padding: 10px var(--space-2) 10px var(--space-5);
+  padding-top: calc(10px + var(--top-inset));
+}
+.panel-header::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: var(--divider-w);
+  background: var(--divider);
+}
+/* On the phone the sidebar slides over the chat row: the translucent panel
+   let «Overseer · Opus» ghost through behind SESSIONS. The heading is solid. */
+#sidebar-header { background: var(--bg-deep); }
+.panel-title {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  line-height: 1.2;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* === Usage pill (topbar.js buildUsage) ===
+   Claude Code 5h session + 7d weekly, each % coloured by level. One factory,
+   two homes: #sidebar-header and #header (the phone's place). A real <button>;
+   its tap area grows to 44px with the shared ::after rule further down. */
+.cc-usage {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 30px;
+  padding: 0 var(--space-3);
+  border-radius: var(--r-pill);
+  border: 1px solid var(--border);
+  background: var(--surface2);
+  color: var(--text-dim);
+  font-family: inherit;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background var(--motion-fast) var(--ease-out),
+              border-color var(--motion-fast) var(--ease-out),
+              opacity var(--motion-base) var(--ease-out);
+}
+.cc-usage:hover { border-color: var(--border-bright); }
+.cc-usage:active,
+.cc-usage[aria-expanded="true"] {
+  background: rgba(var(--accent-rgb), 0.14);
+  border-color: rgba(var(--accent-rgb), 0.34);
+}
+.cc-usage:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.cc-usage.tb-hidden { display: none; }
+/* Last-known numbers (snapshot > 5 min, or the server's last-known-good):
+   still shown, visibly older. Cleared by the next good poll. */
+.cc-usage[data-stale="1"] { opacity: 0.6; }
+.cc-usage .cc-seg {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+.cc-usage .cc-ico { display: inline-flex; color: var(--text-dim); }
+.cc-usage .cc-ico svg { display: block; width: 13px; height: 13px; }
+.cc-usage .cc-seg[data-level="low"]   .cc-val { color: var(--green); }
+.cc-usage .cc-seg[data-level="mid"]   .cc-val { color: var(--orange); }
+.cc-usage .cc-seg[data-level="high"]  .cc-val { color: var(--red); }
+.cc-usage .cc-seg[data-level="empty"] .cc-val { color: var(--text-dim); }
+
+/* [2026-10-16] La copia della pillola nella riga della chat (#header) è tolta:
+   le percentuali stanno solo nel titolo «Sessions». */
+
+/* Usage popup — fixed, positioned by topbar.js under the pill that was tapped.
+   Above the sidebars (--z-popover), because the pill also lives in one. */
+#cc-usage-popup {
+  position: fixed;
+  z-index: var(--z-popover);
+  background: var(--bg-deep);
+  border: 1px solid var(--border-bright);
+  border-radius: var(--r-md);
+  padding: var(--space-3) 14px;
+  font-size: var(--fs-xs);
+  color: var(--text);
+  box-shadow: var(--shadow-lg);
+}
+#cc-usage-popup.up-enter { animation: upEnter var(--motion-fast) var(--ease-out); }
+@keyframes upEnter {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  #cc-usage-popup.up-enter { animation: none; }
+}
+#cc-usage-popup .up-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 10px;
+}
+#cc-usage-popup .up-row { margin-bottom: 10px; }
+#cc-usage-popup .up-row:last-of-type { margin-bottom: 0; }
+#cc-usage-popup .up-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+#cc-usage-popup .up-label {
+  color: var(--text-dim);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+#cc-usage-popup .up-value {
+  font-size: 12px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
+#cc-usage-popup .up-bar {
+  height: 8px;
+  background: rgba(var(--border-rgb), 0.18);
+  border-radius: var(--r-xs);
+  margin-top: 6px;
+  overflow: hidden;
+}
+#cc-usage-popup .up-fill {
+  display: block;
+  height: 100%;
+  min-width: 2px;
+  border-radius: var(--r-xs);
+  /* No width transition: the popup is rebuilt on every refresh, so it never
+     ran — and width is a layout property anyway. */
+}
+#cc-usage-popup .up-fill[data-level="low"]   { background: var(--green); }
+#cc-usage-popup .up-fill[data-level="mid"]   { background: var(--orange); }
+#cc-usage-popup .up-fill[data-level="high"]  { background: var(--red); }
+#cc-usage-popup .up-fill[data-level="empty"] { background: rgba(var(--border-rgb), 0.3); }
+#cc-usage-popup .up-resets {
+  margin-top: 4px;
+  font-size: 10px;
+  color: var(--text-dim);
+}
+#cc-usage-popup .up-resets strong { color: var(--text); font-weight: 600; }
+#cc-usage-popup .up-note {
+  font-size: 10px;
+  color: var(--text-dim);
+  margin-top: 10px;
+  font-style: italic;
+}
+
+/* Per-session model picker popup (2026-08-16) — opened by the model chip.
+   Same visual family as the usage popups above. */
+#model-pick-popup {
+  position: fixed;
+  z-index: 200;
+  background: var(--bg-darker, #0a0a1a);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 10px;
+  padding: 8px;
+  font-size: 12px;
+  color: rgba(255,255,255,0.85);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+}
+#model-pick-popup .mp-title {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: rgba(255,255,255,0.5);
+  padding: 4px 6px 8px;
+}
+#model-pick-popup .mp-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+#model-pick-popup .mp-row:hover { background: rgba(255,255,255,0.08); }
+#model-pick-popup .mp-row[data-active="1"] {
+  color: var(--green, #4ade80);
+  font-weight: 600;
+}
+#model-pick-popup .mp-check { font-size: 11px; }
+
+#toolbar-slot {
+  display: flex;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 6px 2px 11px;
+  flex-shrink: 0;
+}
+
+/* Il posto della barra (File · Wrap · Copy) è tenuto dal PRIMO disegno della
+   vista sessione (12/10/2026): i bottoni arrivano dopo, quando quick-actions ha
+   letto la sua config, e prima la barra spuntava spingendo su il compositore di
+   53px (6 + 36 + 11). Vuota e invisibile finché non arrivano; a modalità
+   offline no (lì la config può non arrivare mai e resterebbe un buco). */
+html:not([data-modalita="offline"]) #app.view-session #toolbar-slot.slot--hidden {
+  display: flex !important;
+  visibility: hidden;
+  min-height: 53px;
+}
+#toolbar-slot .toolbar-action {
+  /* DIMENSIONS â€” all three cards must be identical. Primary gets colors only, never size changes.
+     flex:1 1 0 + fixed height + identical padding + identical border-radius = guaranteed equal width. */
+  flex: 1 1 0;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 0 12px;
+  height: 36px;
+  border-radius: 10px;
+  background: rgba(var(--border-rgb), 0.14);
+  border: 1px solid rgba(var(--border-rgb), 0.28);
+  color: var(--text-dim);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.2px;
+  font-family: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+  opacity: 0.85;
+  touch-action: manipulation;
+  transition: all 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+  box-sizing: border-box;
+}
+#toolbar-slot .toolbar-action:hover {
+  opacity: 1;
+}
+#toolbar-slot .toolbar-action:active {
+  transform: scale(0.94);
+  opacity: 1;
+}
+#toolbar-slot .toolbar-action.is-primary {
+  border-color: rgba(var(--accent-bright-rgb), 0.32);
+  background: rgba(var(--accent-bright-rgb), 0.18);
+  color: var(--accent-bright);
+  opacity: 1;
+}
+#toolbar-slot .toolbar-action .action-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+#toolbar-slot .toolbar-action .action-icon svg {
+  width: 16px;
+  height: 16px;
+  stroke: currentColor;
+  display: block;
+}
+#toolbar-slot .toolbar-action .action-label {
+  white-space: nowrap;
+}
+/* === Mobile Polish (large phone: ~412px viewport) === */
+@media (max-width: 600px) {
+  /* Toolbar: full-row equal buttons, labels always visible */
+  #toolbar-slot { padding: 6px 2px 11px; gap: 6px; }
+  #toolbar-slot .toolbar-action { height: 36px; }
+  #toolbar-slot .toolbar-action .action-label { font-size: 13px; }
+
+  /* Messages: tighter for small screens */
+  .message { padding: 7px 11px 6px; font-size: 14px; line-height: 1.5; }
+  .message.assistant { max-width: 100%; }
+  .message.user { max-width: 85%; }
+  #messages { padding: 8px; }
+  #messages > * + * { margin-top: 6px; }
+
+  /* Input area: slimmer */
+  #input-area { margin: 0 8px 8px; margin-bottom: calc(max(8px, var(--bottom-inset)) + var(--keyboard-height, 0px)); padding: 4px 4px 4px 10px; border-radius: 20px; }
+  /* Phone: font drops to 14px (line = 19.6px). Inside the shared 38px min-height
+     that leaves 18.4px of slack, so the padding must be ~9px — the old 6px left
+     6.4px of dead space under the text and the line read as sitting high-left of
+     centre. Horizontal padding stays tight to keep typing width. */
+  #message-input { padding: 9px 4px; font-size: 14px; }
+
+  /* [2026-10-16] The status-bar rules that lived here went with the black
+     bar. The phone's usage pill is styled with .cc-usage (Slot System). */
+
+  /* Tool process groups: compact */
+  .tool-process-header { padding: 4px 8px; font-size: 10px; }
+  .tool-process-closed .tool-process-header { padding: 2px 8px; }
+  .tool-activity-card { font-size: 10px; padding: 2px 8px; }
+
+  /* Code blocks in messages */
+  .message pre { font-size: 12px; }
+  .message code { font-size: 12px; }
+}
+
+/* === Tool Process Group (collapsible) === */
+.tool-process-group {
+  margin: var(--space-1) 0;
+  border-radius: var(--r-sm);
+  border: 1px solid rgba(255,255,255,0.05);
+  background: rgba(255,255,255,0.012);
+  overflow: hidden;
+  transition: border-color var(--motion-fast) var(--ease-out);
+}
+.tool-process-group:hover { border-color: rgba(255,255,255,0.09); }
+.tool-process-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-3);
+  cursor: pointer;
+  font-size: var(--fs-xs);
+  color: rgba(255,255,255,0.4);
+  -webkit-tap-highlight-color: transparent;
+  transition: color var(--motion-fast) var(--ease-out);
+}
+.tool-process-header:hover { color: rgba(255,255,255,0.6); }
+.tool-process-header:active { opacity: 0.7; }
+.tool-process-arrow {
+  font-size: 8px;
+  transition: transform var(--motion-base) var(--ease-out);
+  color: rgba(255,255,255,0.3);
+}
+.tool-process-open .tool-process-arrow { transform: rotate(90deg); }
+.tool-process-label { font-weight: 500; }
+.tool-process-body {
+  display: none;
+  padding: 2px 6px 4px;
+}
+.tool-process-open .tool-process-body { display: block; }
+/* Closed state â€” minimal */
+.tool-process-closed {
+  opacity: 0.5;
+  border-color: rgba(255,255,255,0.02);
+}
+.tool-process-closed .tool-process-header { padding: 3px 10px; }
+
+/* === Tool Activity Cards === */
+.tool-activity-card {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  margin: 1px 0;
+  background: rgba(255,255,255,0.015);
+  border: 1px solid rgba(255,255,255,0.04);
+  border-radius: 6px;
+  font-size: 11px;
+  color: rgba(255,255,255,0.4);
+  transition: opacity 0.3s, border-color 0.2s, max-height 0.3s;
+  max-height: 32px;
+  overflow: hidden;
+}
+/* Completed cards collapse and vanish */
+.tool-activity-card.tool-activity-done {
+  opacity: 0;
+  max-height: 0;
+  padding: 0 10px;
+  margin: 0;
+  border: none;
+  transition: opacity 0.3s, max-height 0.4s ease 0.1s, padding 0.4s ease 0.1s;
+  pointer-events: none;
+}
+.tool-activity-card--sensitive {
+  border-color: rgba(251,191,36,0.15);
+  background: rgba(251,191,36,0.02);
+}
+.tool-activity-card-icon { font-size: 11px; flex-shrink: 0; }
+.tool-activity-card-name { font-weight: 500; color: rgba(255,255,255,0.55); white-space: nowrap; font-size: 11px; }
+.tool-activity-card-detail {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: monospace;
+  font-size: 10px;
+  color: rgba(255,255,255,0.25);
+}
+.tool-activity-card-status {
+  font-size: 9px;
+  padding: 1px 5px;
+  border-radius: 3px;
+  background: rgba(251,191,36,0.12);
+  color: #fbbf24;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.tool-activity-card-status.tool-activity-card-done {
+  background: rgba(74,222,128,0.08);
+  color: rgba(74,222,128,0.5);
+}
+
+/* Tool output content (collapsible) */
+.tool-output-content {
+  display: none;
+  width: 100%;
+  margin-top: 4px;
+  padding: 6px 8px;
+  background: var(--surface-code);
+  border-radius: 4px;
+  font-family: var(--mono);
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--text);
+  white-space: pre-wrap;
+  word-break: break-all;
+  max-height: 200px;
+  overflow-y: auto;
+}
+.tool-activity-has-output {
+  flex-wrap: wrap;
+  max-height: none !important;
+  opacity: 1 !important;
+  padding: 4px 10px !important;
+  margin: 1px 0 !important;
+  cursor: pointer;
+}
+.tool-output-expanded .tool-output-content {
+  display: block;
+}
+.tool-activity-has-output .tool-activity-card-status {
+  background: rgba(125, 211, 252, 0.1);
+  color: #7dd3fc;
+}
+
+/* [2026-09-10] Tolto il vestito della linea del tempo degli strumenti
+   (~170 righe di regole .tt-*, spina + pallini + onda + @keyframes tt-pulse).
+   Le disegnava SOLO public/js/tool-timeline.js, file mai agganciato a
+   index.html e tolto oggi insieme all'interruttore window.TIMELINE_UI.
+   La strada viva resta quella qui sopra: .tool-activity-card. */
+.tool-activity-has-output .tool-activity-card-status::after {
+  content: ' ▸';
+}
+.tool-output-expanded .tool-activity-card-status::after {
+  content: ' ▾';
+}
+
+/* --- Permission Prompt Cards (in-chat approval for Claude CLI tool use) --- */
+.permission-card {
+  border: 1px solid var(--border-bright);
+  background: var(--accent-glow);
+  border-radius: 12px;
+  padding: 14px 14px 12px;
+  margin: 10px 0;
+  max-width: 100%;
+  box-shadow: 0 0 0 1px rgba(var(--accent-rgb), 0.08) inset;
+}
+.perm-role { color: var(--accent-bright); }
+.perm-role::before { background: var(--accent-bright) !important; }
+.perm-title {
+  font-weight: 600;
+  font-size: 15px;
+  color: var(--text);
+  margin-top: 2px;
+}
+.perm-desc {
+  color: var(--text-dim);
+  font-size: 13px;
+  margin-top: 2px;
+}
+.perm-body {
+  margin-top: 10px;
+  background: var(--bg-deep);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 10px;
+}
+.perm-body-label {
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-bottom: 4px;
+}
+.perm-body-pre {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--text-code);
+  white-space: pre-wrap;
+  word-break: break-word;
+  margin: 0;
+  max-height: 280px;
+  overflow: auto;
+}
+.perm-expand {
+  margin-top: 6px;
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  font-size: 11px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  min-height: 28px;
+}
+.perm-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+.perm-btn {
+  flex: 1 1 auto;
+  min-width: 90px;
+  min-height: 44px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid var(--border-bright);
+  background: var(--bg-deep);
+  color: var(--text);
+  transition: transform 0.08s ease, background 0.12s ease, opacity 0.12s ease;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+.perm-btn:active:not(:disabled) { transform: scale(0.97); }
+.perm-btn:disabled { opacity: 0.5; cursor: default; }
+.perm-allow {
+  background: rgba(74,222,128,0.14);
+  border-color: rgba(74,222,128,0.4);
+  color: #4ade80;
+}
+.perm-always {
+  background: rgba(var(--accent-rgb), 0.15);
+  border-color: rgba(var(--accent-rgb), 0.45);
+  color: var(--accent-bright);
+}
+.perm-deny {
+  background: rgba(248,113,113,0.12);
+  border-color: rgba(248,113,113,0.4);
+  color: #f87171;
+}
+.perm-status {
+  margin-top: 10px;
+  font-size: 12.5px;
+  color: var(--text-dim);
+  min-height: 16px;
+}
+.permission-card.perm-waiting .perm-status { color: var(--text-dim); }
+.permission-card.perm-allowed { border-color: rgba(74,222,128,0.5); }
+.permission-card.perm-allowed .perm-status { color: #4ade80; }
+.permission-card.perm-denied { border-color: rgba(248,113,113,0.5); }
+.permission-card.perm-denied .perm-status { color: #f87171; }
+.permission-card.perm-expired { opacity: 0.55; }
+.permission-card.perm-expired .perm-status { color: var(--text-dim); font-style: italic; }
+@media (max-width: 540px) {
+  .perm-actions { gap: 6px; }
+  .perm-btn { flex-basis: 100%; }
+}
+
+/* [2026-10-12] Tolte le viste a tutto schermo dei portali esterni e il loro
+   caricatore: i portali sono usciti dalla Machine. */
+
+/* [2026-10-16] Tolta la vista Idea Dumper. */
+
+/* [12/11/2026] Tolto lo schermo di blocco dell'impronta (#bio-lock): si entra
+   con la sola parola d'accesso, l'app non si richiude più. */
+
+/* Deploy card â€” inline marker appended after full-restart reconnect */
+.deploy-card {
+  border-left: 3px solid #8aff8a;
+  background: rgba(138, 255, 138, 0.06);
+  padding: 10px 14px;
+  margin: 12px 0;
+  font-family: monospace;
+  font-size: 13px;
+  border-radius: 4px;
+}
+.deploy-card-header { font-weight: bold; color: #8aff8a; margin-bottom: 6px; }
+.deploy-card-body > div { margin: 2px 0; opacity: 0.9; }
+.deploy-card-sha { opacity: 0.5; font-size: 11px; }
+
+/* [2026-09-22, secondo giro di potatura] Tolto il vestito del wiki offline
+   (~246 righe): #wiki-section, #wiki-search-bar, .wiki-icon, #wiki-input,
+   .wiki-mic, .wiki-clear, .wiki-loading, .wiki-pulse, .wiki-status,
+   #wiki-results, .wiki-result-item, #wiki-article-view, .wiki-article-header,
+   .wiki-article-title, .wiki-close-btn, .wiki-frame, .wiki-offline,
+   .wiki-active e i tre @keyframes wikiMicPulse / wikiMicDot / wikiPulse.
+   Li disegnava SOLO il modulo wiki, cancellato stamattina insieme a
+   server/wiki.js. Verificato prima di togliere: nessun class=, nessun
+   classList, nessun innerHTML e nessun id li nomina piu' in public/,
+   plugins/, server/, tests/, tools/, electron/ o app/android/app/src. */
+
+/* === A11y + mobile polish (Stage 7 of UI refresh) === */
+
+/* Unified focus-visible outline — only shown for keyboard navigation, never on click.
+   Wins over per-component `outline: none` because :focus-visible appears later in
+   source order with the same specificity. */
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible,
+a:focus-visible,
+[tabindex]:focus-visible,
+.session-item:focus-visible,
+.recent-pill:focus-visible {
+  outline: 2px solid rgba(var(--accent-bright-rgb), 0.65);
+  outline-offset: 2px;
+  border-radius: var(--r-sm);
+}
+/* Restore native rounding for elements that already have it */
+.recent-pill:focus-visible,
+.session-item:focus-visible {
+  border-radius: inherit;
+}
+
+/* Narrow-phone sidebar: don't squeeze the layout below ~375px screens */
+@media (max-width: 380px) {
+  #sidebar { width: 88vw; max-width: 320px; }
+}
+
+/* ─── Bersagli di tocco da 44px senza cambiare l'aspetto (12/10/2026) ───────
+   I bottoni piccoli restano disegnati uguali; un ::after trasparente, centrato
+   sul bottone, allarga solo l'area che prende il dito a 44×44. Dove due
+   bottoni sono vicini (copia/ascolta, 8px fra loro) l'area si ferma a metà
+   strada per non rubare il tocco al vicino: lì vale 44 in altezza, 40 in largo. */
+#trash-close,
+.trash-item-actions button,
+#apps-close,
+#apps-back,
+.session-delete,
+#header-model-chip,
+.cc-usage { position: relative; }
+#trash-close::after,
+.trash-item-actions button::after,
+#apps-close::after,
+#apps-back::after,
+.session-delete::after,
+#header-model-chip::after,
+.cc-usage::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: max(100%, 44px);
+  height: max(100%, 44px);
+  transform: translate(-50%, -50%);
+}
+/* La × di «elimina per sempre» è stretta (~27px): 10px di spazio da Restore
+   così la sua area da 44 non copre il bordo di Restore. */
+.trash-item-actions .trash-purge { margin-left: 4px; }
+/* La pillola del modello taglia il testo lungo con overflow: «clip» con un
+   margine lascia uscire l'area di tocco senza far uscire il testo (la
+   .tb-val dentro taglia da sé con l'ellissi). */
+#header-model-chip { overflow: clip; overflow-clip-margin: 12px; }
+.message .copy-btn::after,
+.message.assistant .listen-btn::after {
+  content: '';
+  position: absolute;
+  top: -10px;
+  bottom: -10px;
+}
+.message .copy-btn::after { left: -4px; right: -8px; }
+.message.assistant .listen-btn::after { left: -8px; right: -4px; }
+
+/* Cestino della sessione: sui dispositivi a tocco non c'è :hover che lo
+   accenda, e a 0.25 non si vedeva. */
+@media (hover: none) {
+  .session-delete { opacity: 0.5; }
+}
+
+/* Cestino: «Show more» dopo le prime 50 righe (sessions.js renderTrashList). */
+.trash-more {
+  align-self: center;
+  min-height: 44px;
+  padding: 0 18px;
+  border-radius: 10px;
+  border: 1px solid rgba(var(--border-rgb), 0.28);
+  background: rgba(var(--border-rgb), 0.14);
+  color: var(--text-dim);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.trash-more:hover { color: var(--text); }
+
+/* ─── Le modalità (2026-10-07, rifatte dopo la prova del proprietario) ───────────────
+   public/js/modalita.js. Lo stato lo dice la pillola «pc» della barra in
+   alto; qui solo cosa si spegne.
+   [2026-10-12] SOLO PI (chat in sola lettura, #solo-pi-nota) è tolta con la
+   Machine sul Pi.
+   OFFLINE — tutto in grigio (dal 12/10 l'intrattenimento e i collegamenti
+   alla scuola non ci sono più). Il grigio è lo stesso per tutti: solo ciò che
+   non può funzionare si spegne. */
+html[data-modalita="offline"] #session-list,
+html[data-modalita="offline"] #sidebar-footer,
+html[data-modalita="offline"] #messages,
+html[data-modalita="offline"] #input-area,
+html[data-modalita="offline"] #header-model-chip,
+html[data-modalita="offline"] #all-teams-btn,
+html[data-modalita="offline"] .apps-card {
+  opacity: 0.5;          /* /designer 07/10: 0.35 rendeva i titoli illeggibili (2,6:1) */
+  filter: grayscale(1);
+  pointer-events: none;
+}
+html[data-modalita="offline"] .apps-card { cursor: default; }
+html[data-modalita="offline"] #empty-state { display: none !important; }
+#casa-offline { display: none; }
+html[data-modalita="offline"] #casa-offline {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 28px 16px 8px;
+  max-width: 520px;
+  width: 100%;
+  margin: 0 auto;
+}
+#casa-offline .casa-titolo { font-size: 17px; font-weight: 600; color: var(--text); }
+#casa-offline .casa-sotto { margin-top: -6px; font-size: 13px; line-height: 1.45; color: var(--text-dim); }
+html[data-senza-accesso="si"] #messages,
+html[data-senza-accesso="si"] #session-list,
+html[data-senza-accesso="si"] #recent-sessions-strip { display: none !important; }
+
+/* Sudo dal telefono (07/11/2026): la casella della password. public/js/sudo-telefono.js */
+.sudo-velo {
+  position: fixed; top: 0; right: 0; bottom: 0; left: 0; z-index: 10050;
+  background: rgba(4, 2, 14, 0.72);
+  display: flex; align-items: flex-end; justify-content: center;
+  padding: 16px 16px 28px;
+}
+.sudo-carta {
+  width: 100%; max-width: 440px; box-sizing: border-box;
+  background: var(--bg); color: var(--text);
+  border: 1px solid var(--border); border-radius: 16px;
+  padding: 20px 18px 16px;
+}
+.sudo-titolo { font-size: 18px; font-weight: 600; }
+.sudo-sotto { margin-top: 6px; font-size: 14px; color: var(--text-dim); }
+.sudo-comando {
+  display: block; margin-top: 10px; padding: 10px 12px; border-radius: 10px;
+  background: var(--surface-code); font-size: 13px; line-height: 1.4;
+  white-space: pre-wrap; word-break: break-all; max-height: 30vh; overflow: auto;
+}
+.sudo-campo {
+  display: block; width: 100%; box-sizing: border-box; margin-top: 14px;
+  padding: 14px 12px; font-size: 17px; border-radius: 10px;
+  background: var(--surface2); color: var(--text); border: 1px solid var(--border);
+}
+.sudo-campo:focus { outline: none; border-color: var(--accent); }
+.sudo-bottoni { display: flex; margin-top: 14px; }
+.sudo-bottoni button {
+  flex: 1; min-height: 50px; font-size: 16px; border-radius: 12px; cursor: pointer;
+  border: 1px solid var(--border);
+}
+.sudo-bottoni button + button { margin-left: 10px; }
+.sudo-no { background: transparent; color: var(--text); }
+.sudo-si { background: var(--accent); color: var(--bg); font-weight: 600; border-color: var(--accent); }
+.sudo-bottoni button:disabled { opacity: 0.5; }
+.sudo-stato { margin-top: 8px; min-height: 18px; font-size: 13px; color: var(--text-dim); }
+
+/* «!comando» nella chat (07/11/2026): l'uscita la scrive il PC. server/comando-chat.js */
+.message.comando {
+  background: rgba(4, 2, 14, 0.6);
+  border: 1px solid rgba(var(--border-rgb), 0.16);
+  margin-right: auto;
+  border-bottom-left-radius: var(--r-sm);
+  max-width: 100%;
+}
+.message.comando .msg-role { color: var(--text-dim); }
+.message.comando pre {
+  white-space: pre-wrap; overflow-wrap: anywhere; overflow-x: hidden;
+  max-height: 60vh; overflow-y: auto; font-size: 12px; line-height: 1.4;
+}
