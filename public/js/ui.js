@@ -104,7 +104,7 @@ var APP_GROUPS = [
   ]},
   { id: 'system', items: [
     // Backup is a plugin since 16/10/2026 (plugins/backup/): the Entertainment
-    // disk, plus the nightly Hetzner copy that this tile used to start.
+    // disk, plus the nightly backup that this tile used to start.
     { kind: 'plugin', pluginId: 'backup', desc: 'Update disk' },
     { kind: 'plugin', pluginId: 'updates', desc: 'Update everything' },
     // [07/11/2026] Terminal tolto: i comandi si scrivono in chat con «!» (server/comando-chat.js).

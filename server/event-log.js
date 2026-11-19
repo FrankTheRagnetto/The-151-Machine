@@ -10,7 +10,7 @@
 //
 // Storage: ~/.151machine/events/events.jsonl (one event per line, append-only,
 // no rotation yet — JSONL stays cheap; revisit if it ever gets large). Lives
-// under ~/.151machine so the existing backup-state timer mirrors it to Hetzner.
+// under ~/.151machine so the existing nightly backup copies it too.
 const fs = require('fs');
 const os = require('os');
 const path = require('path');

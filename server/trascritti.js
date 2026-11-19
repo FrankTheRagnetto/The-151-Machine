@@ -35,11 +35,10 @@ const zlib = require('zlib');
 const crypto = require('crypto');
 const { spawn } = require('child_process');
 
-// L'archivio NON sta in ~/.151machine: quella cartella va ogni notte su Hetzner
-// IN CHIARO (tools/backup-state.sh), e i trascritti contengono password vere
-// nelle uscite dei comandi (controllo /hack del 03/11: chiave di firma, Mollie
-// Live, database…). Fuori da ogni copia in chiaro finché il proprietario non decide
-// come mandarla fuori casa chiusa a chiave.
+// L'archivio NON sta in ~/.151machine: quella cartella finisce nel backup
+// notturno (tools/backup-state.sh), e i trascritti contengono dati sensibili
+// nelle uscite dei comandi (controllo /hack del 03/11). Resta fuori da ogni
+// backup finché il proprietario non decide come proteggerlo.
 function percorsiDiBase(home = os.homedir()) {
   return {
     sorgente: path.join(home, '.claude', 'projects'),

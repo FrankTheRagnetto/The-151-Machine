@@ -119,7 +119,7 @@ try {
     const arch = path.join(casa, '.local', 'share', 'the-151-machine', 'trascritti');
     const dest = path.join(arch, '-home-y', 'sess-z.jsonl.zst');
     const log = path.join(arch, 'archivia.log');
-    assert.ok(!arch.includes('.151machine'), 'mai dentro la cartella che va in chiaro su Hetzner');
+    assert.ok(!arch.includes('.151machine'), 'mai dentro la cartella del backup notturno');
     const fine = Date.now() + 15000;
     while (Date.now() < fine && !(fs.existsSync(log) && /nuove 1/.test(fs.readFileSync(log, 'utf-8')))) spawnSync('sleep', ['0.2']);
     assert.ok(fs.existsSync(dest), 'copia nata dal processo a parte: ' + (fs.existsSync(log) ? fs.readFileSync(log, 'utf-8') : 'nessun log'));

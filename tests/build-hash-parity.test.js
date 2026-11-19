@@ -20,7 +20,7 @@ const { computeContentHash } = require('../server/build-hash');
 const REPO = path.join(__dirname, '..');
 
 // The bash side is READ from tools/deploy.sh (06/10/2026), never copied: a
-// hand copy here let deploy.sh gain an exclusion (.hetzner-copy.json) that the
+// hand copy here let deploy.sh gain an exclusion (a backup state file) that the
 // server lacked, and this test stayed green on its stale copy.
 const DEPLOY_SH = fs.readFileSync(path.join(REPO, 'tools', 'deploy.sh'), 'utf8');
 const m = DEPLOY_SH.match(/^CODE_HASH=\$\((find server[\s\S]*?cut -c1-12)\)$/m);
